@@ -7,23 +7,32 @@
 #include <linux/serial.h>
 #include <asm/ioctls.h>
 #include <stdlib.h>
+#include <stdbool.h>
+#include <getopt.h>
 
 #include "futil.h"
 #include "fconf.h"
+#include "freg.h"
 
-#define NB_REGS 1
+static void print_usage(const char *pname)
+{
+	printf("Usage:\n%s "
+			"[--set value] [address]"
+			"\n", pname);
+}
 
 
 int main(int argc, char *argv[])
 {
 	int ret;
 	modbus_t *ctx;
-	int addr = 0;
-	uint16_t dest [NB_REGS];
+	int addr = -1;
+	uint16_t dest;
 	struct fconf conf;
 	char fname[255];
+	bool set = false;
+	uint16_t setval;
 	int err;
-
 
 	memset(&conf, 0, sizeof(conf));
 	sprintf(fname, "%s/.config/.fspctl", getenv("HOME"));
@@ -31,8 +40,29 @@ int main(int argc, char *argv[])
 	if (err)
 		return err;
 
-	if (argc > 1)
-		addr = atoi(argv[1]);
+	while (1) {
+		int c;
+		static struct option long_options[] = {
+			{"set",  1, 0, 's'},
+			{0,      0, 0,   0}
+		};
+
+		c = getopt_long(argc, argv, "", long_options, NULL);
+		if (c == -1)
+			break;
+
+		switch (c) {
+			case 's':
+				set = true;
+				setval = (uint16_t) atoi(optarg);
+				break;
+
+			default:
+				print_usage(argv[0]);
+				return EINVAL;
+		}
+	}
+
 
 	printf("Connecting to %s modbus slave %d\n",
 	       conf.ttydev, conf.slaveid);
@@ -63,15 +93,19 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 
-	ret = modbus_read_registers(ctx, addr, 1, dest);
+	if (addr == -1 )
+		ret = print_all_registers(ctx);
+	else
+		ret = modbus_read_registers(ctx, addr, 1, &dest);
+
 	if(ret < 0) {
 		perror("modbus_read_regs error\n");
 		return -1;
 	}
 
-	printf("val = %04x = %u = ", dest[0], dest[0]);
-	bin_u16(dest[0]);
-	ascii_u16(dest[0]);
+	printf("val = %04x = %u = ", dest, dest);
+	bin_u16(dest);
+	ascii_u16(dest);
 
 	modbus_close(ctx);
 	modbus_free(ctx);

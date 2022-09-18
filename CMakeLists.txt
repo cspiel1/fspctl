@@ -10,7 +10,12 @@ find_package(PkgConfig REQUIRED)
 pkg_check_modules(MODBUS REQUIRED libmodbus)
 
 # add the executable
-add_executable(fspctl src/fconf.c src/futil.c src/fspctl.c)
+add_executable(fspctl
+	src/main.c
+	src/fconf.c
+	src/futil.c
+	src/freg.c
+)
 
 link_directories(
 	${MODBUS_LIBRARY_DIRS}

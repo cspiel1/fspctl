@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 
+#include "futil.h"
 #include "fconf.h"
 
 #define TTYDEV   "/dev/ttyUSB0"
@@ -173,7 +174,7 @@ static int conf_proc_line(struct fconf *conf, const char *line)
 	char *key;
 	char *val;
 	char *e;
-	size_t n = sizeof(confkeys)/sizeof(struct confkey);
+	size_t n = ARRAY_SIZE(confkeys);
 	int err = 0;
 
 	buf = strdup(line);
@@ -209,7 +210,7 @@ static int conf_proc_line(struct fconf *conf, const char *line)
 int write_conf_file(struct fconf *conf, const char *fname)
 {
 	FILE *f;
-	size_t n = sizeof(confkeys)/sizeof(struct confkey);
+	size_t n = ARRAY_SIZE(confkeys);
 	int err = 0;
 
 	if (!conf || !fname)
@@ -238,7 +239,7 @@ int write_conf_file(struct fconf *conf, const char *fname)
 
 static int write_template(struct fconf *conf, const char *fname)
 {
-	size_t n = sizeof(confkeys)/sizeof(struct confkey);
+	size_t n = ARRAY_SIZE(confkeys);
 	int err;
 
 	/* set default config */
@@ -302,7 +303,7 @@ out:
 
 void free_fconfig(struct fconf *conf)
 {
-	size_t n = sizeof(confkeys)/sizeof(struct confkey);
+	size_t n = ARRAY_SIZE(confkeys);
 	if (!conf)
 		return;
 
