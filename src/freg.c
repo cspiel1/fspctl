@@ -16,7 +16,7 @@ enum {
 
 enum reg_type {
 	REG_BOOL,
-	REG_INT,
+	REG_NUM,
 	REG_HEX,
 	REG_ASCII
 };
@@ -109,6 +109,19 @@ struct p17_register registers[] = {
 
 {789, 0, 4, REG_HEX, "Solar energy distribution of priority", NULL, 0, false,
 	false},
+
+{26, 10, 1, REG_BOOL, "command for fault recovery", NULL, 0, false, false},
+
+{59, 15, 1, REG_BOOL, "Setting control parameter to default value", NULL, 0,
+	false, true},
+
+{379, 15, 1, REG_BOOL, "Li-Fe battery self-test by charged at a time", NULL, 0,
+	false, true},
+
+{1010, 0, 4, REG_HEX, "Battery piece number", NULL, 0, true, false},
+{1011, 0, 16, REG_NUM, "Battery standard voltage per unit", "V", 10, true,
+	false},
+
 };
 
 
@@ -153,13 +166,19 @@ static void print_reg(struct p17_register *reg, uint16_t *val)
 		sprintf(vtxt, "%s", (((uint16_t) 1) << reg->bit) & *val ?
 			"YES": "NO");
 		break;
-	case REG_INT:
+	case REG_NUM:
 	case REG_HEX: {
 		uint32_t v0 = val[0];
 		uint32_t v;
 		v = nb == 1 ? v0 : (v0 << 16) + val[1];
-		if (reg->typ == REG_INT) {
-			sprintf(vtxt, "%d", (int) v);
+		if (reg->typ == REG_NUM) {
+			float vf = (int) v;
+			if (reg->div)
+				vf = vf / reg->div;
+
+			sprintf(vtxt, "%.01f", vf);
+			if (reg->unit)
+				strcat(vtxt, reg->unit);
 		}
 		else {
 			nb = reg->size / 4;
