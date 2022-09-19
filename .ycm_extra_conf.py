@@ -44,6 +44,8 @@ SOURCE_EXTENSIONS = [ '.cpp', '.cxx', '.cc', '.c', '.m', '.mm' ]
 flags = [
 '-I.',
 '-I/usr/include',
+'-I/usr/local/include',
+'-I/usr/local/include/modbus',
 '-I/home/cspiel/src/fspctl/include',
 '-I/home/cspiel/src/fspctl/src',
 '-I.',

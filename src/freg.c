@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
-#include <modbus/modbus.h>
+#include <modbus.h>
 
 #include "futil.h"
 #include "freg.h"

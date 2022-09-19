@@ -17,12 +17,14 @@ add_executable(fspctl
 	src/freg.c
 )
 
-link_directories(
-	${MODBUS_LIBRARY_DIRS}
+message("MODBUS_LIBRARY_DIRS=${MODBUS_LIBRARY_DIRS}")
+
+target_link_directories(fspctl
+	PUBLIC ${MODBUS_LIBRARY_DIRS}
 )
 
-include_directories(
-	${MODBUS_INCLUDE_DIRS}
+target_include_directories(fspctl AFTER
+	PUBLIC ${MODBUS_INCLUDE_DIRS}
 )
 
 target_link_libraries(fspctl
