@@ -35,6 +35,8 @@ struct p17_register {
 
 
 struct p17_register registers[] = {
+
+/* 1. Warning items */
 {0,  0, 1, REG_BOOL, "AC input frequency loss", NULL, 0, true, false},
 {0,  1, 1, REG_BOOL, "AC input voltage loss", NULL, 0, true, false},
 {0,  2, 1, REG_BOOL, "AC input long-time average voltage over", NULL, 0, true,
@@ -66,6 +68,7 @@ struct p17_register registers[] = {
 {1, 14, 1, REG_BOOL, "AC input phase dislocation", NULL, 0, true, false},
 {1, 15, 1, REG_BOOL, "AC input island", NULL, 0, true, false},
 
+/* 2. Enable/Disable items */
 {2,  8, 1, REG_BOOL, "Feeding Power over frequency de-rating", NULL, 0, false,
 	false},
 {2,  9, 1, REG_BOOL, "Feeding Power over voltage de-rating", NULL, 0, false,
@@ -107,6 +110,7 @@ struct p17_register registers[] = {
 {284, 0, 1, REG_BOOL, "Enable/disable AC charger keep battery voltage "
 	"function", NULL, 0, false, false},
 
+/* 3. Setting Energy priority */
 {789, 0, 4, REG_HEX, "Solar energy distribution of priority", NULL, 0, false,
 	false},
 
@@ -118,6 +122,7 @@ struct p17_register registers[] = {
 {379, 15, 1, REG_BOOL, "Li-Fe battery self-test by charged at a time", NULL, 0,
 	false, true},
 
+/* 5. Working mode */
 {1010, 0, 16, REG_NUM, "Battery piece number", NULL, 0, true, false},
 {1011, 0, 16, REG_NUM, "Battery standard voltage per unit", "V", 10, true,
 	false},
@@ -128,6 +133,16 @@ struct p17_register registers[] = {
 {1016, 0, 16, REG_NUM, "Output power factor", NULL , 0, true, false},
 {1017, 0, 32, REG_NUM, "Output rated VA", "VA", 0, true, false},
 {1019, 0, 32, REG_ASCII, "Machine number", NULL, 0, true, false},
+
+{208, 0, 4, REG_HEX, "Working mode", NULL, 0, true, false},
+
+/* 6. Working status */
+{188, 0, 16, REG_NUM, "Battery voltage", "V", 10, true, false},
+{204, 0, 16, REG_NUM, "External battery temperature", NULL, 0, true, false},
+{211, 0, 32, REG_NUM, "AC input active power R", "W", 0, true, false},
+{216, 0, 16, REG_NUM, "AC output voltage R", "V", 10, true, false},
+{217, 0, 32, REG_NUM, "AC output active power R", "W", 0, true, false},
+{219, 0, 16, REG_NUM, "AC output frequency", "Hz", 100, true, false},
 
 };
 
@@ -193,9 +208,11 @@ static void print_reg(struct p17_register *reg, uint16_t *val)
 		v = nb == 1 ? v0 : (v0 << 16) + val[1];
 		if (reg->typ == REG_NUM) {
 			if (reg->div) {
-				float vf = (int) v;
-				vf = vf / reg->div;
-				sprintf(vtxt, "%.01f", vf);
+				int r = ((int) v) / reg->div;
+				int c = ((int) v) % reg->div;
+				if (c < 0)
+					c *= -1;
+				sprintf(vtxt, "%d.%d", r, c);
 			}
 			else {
 				sprintf(vtxt, "%d", (int) v);
