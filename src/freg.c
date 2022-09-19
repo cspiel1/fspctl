@@ -118,9 +118,16 @@ struct p17_register registers[] = {
 {379, 15, 1, REG_BOOL, "Li-Fe battery self-test by charged at a time", NULL, 0,
 	false, true},
 
-{1010, 0, 4, REG_HEX, "Battery piece number", NULL, 0, true, false},
+{1010, 0, 16, REG_NUM, "Battery piece number", NULL, 0, true, false},
 {1011, 0, 16, REG_NUM, "Battery standard voltage per unit", "V", 10, true,
 	false},
+{1012, 0, 16, REG_NUM, "AC input phase number", NULL, 0, true, false},
+{1013, 0, 16, REG_NUM, "AC output phase number", NULL, 0, true, false},
+{1014, 0, 16, REG_NUM, "Nominal AC input voltage",  "V", 10, true, false},
+{1015, 0, 16, REG_NUM, "Nominal AC output voltage", "V", 10, true, false},
+{1016, 0, 16, REG_NUM, "Output power factor", NULL , 0, true, false},
+{1017, 0, 32, REG_NUM, "Output rated VA", "VA", 0, true, false},
+{1019, 0, 32, REG_ASCII, "Machine number", NULL, 0, true, false},
 
 };
 
@@ -151,9 +158,22 @@ static void print_reg(struct p17_register *reg, uint16_t *val)
 {
 	char fill[VALPOS];
 	char vtxt[VALSIZE * 2 + 1];
-	int nb = reg->size / 16;
+	int nb;
 	const char *p;
 	size_t sz;
+
+	switch (reg->typ) {
+	case REG_BOOL:
+		nb = 1;
+		break;
+	case REG_NUM:
+	case REG_HEX:
+		nb = reg->size / 16;
+		break;
+	case REG_ASCII:
+		nb = reg->size / 8;
+		break;
+	}
 
 	if (nb > VALSIZE)
 		nb = VALSIZE;
@@ -172,11 +192,14 @@ static void print_reg(struct p17_register *reg, uint16_t *val)
 		uint32_t v;
 		v = nb == 1 ? v0 : (v0 << 16) + val[1];
 		if (reg->typ == REG_NUM) {
-			float vf = (int) v;
-			if (reg->div)
+			if (reg->div) {
+				float vf = (int) v;
 				vf = vf / reg->div;
-
-			sprintf(vtxt, "%.01f", vf);
+				sprintf(vtxt, "%.01f", vf);
+			}
+			else {
+				sprintf(vtxt, "%d", (int) v);
+			}
 			if (reg->unit)
 				strcat(vtxt, reg->unit);
 		}
@@ -191,8 +214,11 @@ static void print_reg(struct p17_register *reg, uint16_t *val)
 	        }
 		break;
 	case REG_ASCII:
-		for (int i = 0; i < nb; ++i)
-			memcpy(vtxt + 2 * i, val + i, 2);
+		for (int i = 0; i < nb; ++i) {
+			vtxt[i] = i % 2 == 0 ?
+				(char) (val[i/2] >> 8) :
+				(char) val[i/2];
+		}
 
 		vtxt[2 * nb] = 0;
 		break;
