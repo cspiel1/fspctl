@@ -33,6 +33,11 @@ struct p17_register {
 	bool wo;              /* write only flag                             */
 };
 
+struct p17_reg_group {
+	const char *name;
+	uint16_t address;
+};
+
 
 struct p17_register registers[] = {
 
@@ -137,14 +142,62 @@ struct p17_register registers[] = {
 {208, 0, 4, REG_HEX, "Working mode", NULL, 0, true, false},
 
 /* 6. Working status */
-{188, 0, 16, REG_NUM, "Battery voltage", "V", 10, true, false},
-{204, 0, 16, REG_NUM, "External battery temperature", NULL, 0, true, false},
 {211, 0, 32, REG_NUM, "AC input active power R", "W", 0, true, false},
 {216, 0, 16, REG_NUM, "AC output voltage R", "V", 10, true, false},
+{247, 0, 16, REG_NUM, "AC output voltage S", "V", 10, true, false},
+{248, 0, 16, REG_NUM, "AC output voltage T", "V", 10, true, false},
+
 {217, 0, 32, REG_NUM, "AC output active power R", "W", 0, true, false},
+{241, 0, 32, REG_NUM, "AC output active power S", "W", 0, true, false},
+{243, 0, 32, REG_NUM, "AC output active power T", "W", 0, true, false},
+{245, 0, 32, REG_NUM, "AC output total active power", "W", 0, true, false},
+
 {219, 0, 16, REG_NUM, "AC output frequency", "Hz", 100, true, false},
+{220, 0, 16, REG_NUM, "AC output current R", "A", 10, true, false},
+{239, 0, 16, REG_NUM, "AC output current S", "A", 10, true, false},
+{240, 0, 16, REG_NUM, "AC output current T", "A", 10, true, false},
+
+{226, 0, 16, REG_NUM, "Battery capacity", "%", 0, true, false},
+{230, 0, 32, REG_NUM, "Battery current", "A", 10, true, false},
+{188, 0, 16, REG_NUM, "Battery voltage", "V", 10, true, false},
+{204, 0, 16, REG_NUM, "External battery temperature", NULL, 0, true, false},
+
+{228, 0, 32, REG_NUM, "Solar input power 1", "W", 0, true, false},
+{232, 0, 32, REG_NUM, "Solar input power 2", "W", 0, true, false},
+{234, 0, 16, REG_NUM, "Solar input voltage 1", "V", 10, true, false},
+{235, 0, 16, REG_NUM, "Solar input voltage 2", "V", 10, true, false},
+
+{237, 0, 16, REG_NUM, "Component max temperature", NULL, 0, true, false},
 
 };
+
+
+struct p17_reg_group groups[] = {
+	{"1. Warning items",            0x0000},
+	{"2. Enable/Disable items",     0x0002},
+	{"3. Setting Energy priority",  0x0315},
+	{"4. Control Items",            0x001A},
+	{"5. Working mode",             0x03f2},
+	{"6. Working status",           0x00bc},
+	{"7. Time information",         0x0113},
+};
+
+
+static void print_title(uint32_t address)
+{
+	size_t n = ARRAY_SIZE(groups);
+
+	for (size_t i = 0; i < n; ++i) {
+		struct p17_reg_group *g = &groups[i];
+		if (g->address == address) {
+			printf("\n%s\n", g->name);
+			for (int j = 0; j < 80; ++j)
+				printf("%c", '=');
+
+			printf("\n");
+		}
+	}
+}
 
 
 static const char *print_subline(const char *txt)
@@ -285,9 +338,7 @@ int print_all_registers(modbus_t *ctx)
 
 			addr = reg->address;
 			memset(val, 0, sizeof(val));
-			printf("\nQuery register 0x%04x\n", addr);
-			for (int j = 0; j <= 80; ++j)
-				printf("%c", j < 80 ? '=' : '\n');
+			print_title(addr);
 
 			mret = modbus_read_registers(ctx, addr, nb, val);
 			if (ctx && mret == -1) {
