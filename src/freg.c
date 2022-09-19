@@ -77,7 +77,49 @@ struct p17_register registers[] = {
 	{2, 14, 1, REG_BOOL, "Mute buzzer beep in standby mode",
 		NULL, 0, false},
 	{2, 15, 1, REG_BOOL, "Mute buzzer beep", NULL, 0, false},
+
+	{7,  7, 1, REG_BOOL, "Enable/Disable Parallel for output",
+		NULL, 0, false},
+	{7,  8, 1, REG_BOOL, "Enable/disable auto adjust PF "
+		"according to Feed power", NULL, 0, false},
+	{7,  9, 1, REG_BOOL, "Enable/disable battery discharge to "
+		"feed power to utility when solar input lost", NULL, 0, false},
+	{7, 10, 1, REG_BOOL, "Enable/disable battery discharge to "
+		"feed power to utility when solar input normal", NULL, 0,
+		false},
+	{7, 11, 1, REG_BOOL, "Enable/disable battery discharge to "
+		"loads when solar input loss", NULL, 0, false},
+	{7, 12, 1, REG_BOOL, "Enable/disable battery discharge to "
+		"loads when solar input normal", NULL, 0, false},
+	{7, 13, 1, REG_BOOL, "Enable/disable feed power to utility",
+		NULL, 0, false},
+	{7, 14, 1, REG_BOOL, "Enable/disable AC charge battery",
+		NULL, 0, false},
+	{7, 15, 1, REG_BOOL, "Enable/disable charge battery", NULL, 0, false},
 };
+
+
+static const char *print_subline(const char *txt)
+{
+	size_t sz = VALPOS - 3;
+	const char *p = txt + sz;
+
+	for (; p > txt && p[0]!=' '; --p)
+		--sz;
+
+	printf("%.*s\n", sz, txt);
+
+	sz = strlen(p);
+	if (sz > 1024) {
+		printf("ERR - description to long\n");
+		return NULL;
+	}
+
+	if (sz > VALPOS - 3)
+		return print_subline(p);
+	else
+		return p;
+}
 
 
 static void print_reg(struct p17_register *reg, uint16_t *val)
@@ -86,6 +128,9 @@ static void print_reg(struct p17_register *reg, uint16_t *val)
 	char vtxt[VALSIZE * 2 + 1];
 	int vint;
 	int nb = reg->size / 16;
+	const char *p;
+	size_t sz;
+
 	if (nb > VALSIZE)
 		nb = VALSIZE;
 
@@ -112,9 +157,16 @@ static void print_reg(struct p17_register *reg, uint16_t *val)
 		break;
 	}
 
+	p = reg->desc;
+	sz = strlen(p);
+	if (sz > VALPOS - 3) {
+		p = print_subline(reg->desc);
+		sz = strlen(p);
+	}
+
 	memset(fill, 0, sizeof(fill));
-	memset(fill, ' ', VALPOS - strlen(reg->desc));
-	printf("%s%s%s\n", reg->desc, fill, vtxt);
+	memset(fill, ' ', VALPOS - sz);
+	printf("%s%s%s\n", p, fill, vtxt);
 }
 
 
