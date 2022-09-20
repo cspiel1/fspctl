@@ -362,7 +362,6 @@ struct p17_register registers[] = {
 	10, true, false},
 
 /* 19. PV model and rating information */
-
 {1003, 0, 64, REG_ASCII, "Series number", NULL, 0, true, false},
 {293, 0, 16, REG_NUM, "AC input rated frequency", "Hz", 10, false, false},
 {295, 0, 16, REG_NUM, "AC input rated current", "A", 10, true, false},
@@ -379,7 +378,28 @@ struct p17_register registers[] = {
 {1201, 0, 16, REG_NUM, "Minmum PF value when power percentage reach 100%", "V",
 	100, false, false},
 
+/* 20. Set Allow AC-charging duration /Off-Peak duration */
+{865, 0, 16, REG_NUM, "Start time for enable AC charger working", NULL, 0,
+	false, false},
+{867, 0, 16, REG_NUM, "Ending time for enable AC charger working", NULL, 0,
+	false, false},
+{870, 0, 16, REG_NUM, "Start time2 for enable AC charger working", NULL, 0,
+	false, false},
+{871, 0, 16, REG_NUM, "Ending time2 for enable AC charger working", NULL, 0,
+	false, false},
+
+/* 21. Set AC Output ON/Off Timer */
+{868, 0, 16, REG_NUM, "Start time for enable AC supply the load", NULL, 0,
+	false, false},
+{869, 0, 16, REG_NUM, "Ending time for enable AC supply the load", NULL, 0,
+	false, false},
+
+/* 22. Change inverter mode */
+{1475, 0, 16, REG_NUM, "Change machine model", NULL, 0,	false, false},
+
 };
+
+
 
 
 struct p17_reg_group groups[] = {
@@ -399,6 +419,9 @@ struct p17_reg_group groups[] = {
 	{"17. Feeding wait time",       0x0120},
 	{"18. Getting range information",       0x00c6},
 	{"19. PV model and rating information", 0x03eb},
+	{"20. Set Allow AC-charging duration /Off-Peak duration", 0x0361},
+	{"21. Set AC Output ON/Off Timer",      0x0364},
+
 };
 
 
