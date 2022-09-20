@@ -327,6 +327,9 @@ static void print_reg(struct p17_register *reg, uint16_t *val)
 		break;
 	}
 
+	if (reg->unit)
+		strcat(vtxt, reg->unit);
+
 	p = reg->desc;
 	sz = strlen(p);
 	if (sz > VALPOS - 3) {
@@ -388,7 +391,9 @@ int print_register(modbus_t *ctx, int addr)
 {
 	size_t n = ARRAY_SIZE(registers);
 	uint16_t val[VALSIZE];
+	bool read = false;
 	int err = 0;
+
 	for (size_t i = 0; i < n; ++i) {
 		struct p17_register *reg = &registers[i];
 		int nb = reg->size / 16;
@@ -401,15 +406,17 @@ int print_register(modbus_t *ctx, int addr)
 			return EINVAL;
 		}
 
-		mret = modbus_read_registers(ctx, addr, nb, val);
-		if (ctx && mret == -1) {
-			perror("ERR - modbus read error\n");
-			err = EPROTO;
-			break;
+		if (!read) {
+			read = true;
+			mret = modbus_read_registers(ctx, addr, nb, val);
+			if (ctx && mret == -1) {
+				perror("ERR - modbus read error\n");
+				err = EPROTO;
+				break;
+			}
 		}
 
 		print_reg(reg, val);
-		break;
 	}
 
 	return err;
