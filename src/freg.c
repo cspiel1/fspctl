@@ -416,6 +416,7 @@ static void print_reg(struct p17_register *reg, uint16_t *val)
 	memset(fill, 0, sizeof(fill));
 	memset(fill, ' ', VALPOS - sz);
 	printf("%s%s%s\n", p, fill, vtxt);
+/*        printf("   %04x\n", val[0]);*/
 }
 
 
@@ -468,12 +469,12 @@ int print_register(modbus_t *ctx, int addr)
 	size_t n = ARRAY_SIZE(registers);
 	uint16_t val[VALSIZE];
 	bool read = false;
+	int mret;
 	int err = 0;
 
 	for (size_t i = 0; i < n; ++i) {
 		struct p17_register *reg = &registers[i];
 		int nb;
-		int mret;
 		if (reg->address != addr)
 			continue;
 
@@ -502,6 +503,14 @@ int print_register(modbus_t *ctx, int addr)
 		}
 
 		print_reg(reg, val);
+	}
+
+	if (!err && !read) {
+		mret = modbus_read_registers(ctx, addr, 1, val);
+		if (ctx && mret != -1) {
+			printf("Unknown register %04x:    %04x\n",
+			       addr, val[0]);
+		}
 	}
 
 	return err;
