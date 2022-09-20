@@ -251,32 +251,76 @@ static const char *print_subline(const char *txt)
 }
 
 
+static void convert_num(char *txt,
+			const struct p17_register *reg, uint16_t *val)
+{
+	int nb;
+	uint32_t v0 = val[0];
+	uint32_t v;
+
+	nb = reg->size / 16;
+	if (nb > VALSIZE) nb = VALSIZE;
+	else if (!nb) nb = 1;
+
+	v = nb == 1 ? v0 : (v0 << 16) + val[1];
+
+	if (reg->div) {
+		int r = ((int) v) / reg->div;
+		int c = ((int) v) % reg->div;
+		if (c < 0)
+			c *= -1;
+		sprintf(txt, "%d.%d", r, c);
+	}
+	else {
+		sprintf(txt, "%d", (int) v);
+	}
+}
+
+
+static void convert_hex(char *txt,
+			const struct p17_register *reg, uint16_t *val)
+{
+	int nb;
+	uint32_t v0 = val[0];
+	uint32_t v;
+
+	nb = reg->size / 16;
+	if (nb > VALSIZE) nb = VALSIZE;
+	else if (!nb) nb = 1;
+
+	v = nb == 1 ? v0 : (v0 << 16) + val[1];
+
+	nb = reg->size / 4;
+	if (nb > VALSIZE) nb = 4;
+	else if (!nb) nb = 1;
+
+	sprintf(txt, "0x%0*x", nb, v);
+}
+
+
+static void convert_txt(char *txt,
+			const struct p17_register *reg, uint16_t *val)
+{
+	int nb;
+
+	nb = reg->size / 8;
+
+	for (int i = 0; i < nb; ++i) {
+		txt[i] = i % 2 == 0 ?
+			(char) (val[i/2] >> 8) :
+			(char) val[i/2];
+	}
+
+	txt[2 * nb] = 0;
+}
+
+
 static void print_reg(struct p17_register *reg, uint16_t *val)
 {
 	char fill[VALPOS];
 	char vtxt[VALSIZE * 2 + 1];
-	int nb;
 	const char *p;
 	size_t sz;
-
-	switch (reg->typ) {
-	case REG_BOOL:
-		nb = 1;
-		break;
-	case REG_NUM:
-	case REG_HEX:
-		nb = reg->size / 16;
-		break;
-	case REG_ASCII:
-		nb = reg->size / 8;
-		break;
-	}
-
-	if (nb > VALSIZE)
-		nb = VALSIZE;
-
-	if (!nb)
-		nb = 1;
 
 	switch (reg->typ) {
 	case REG_BOOL:
@@ -284,42 +328,13 @@ static void print_reg(struct p17_register *reg, uint16_t *val)
 			"YES": "NO");
 		break;
 	case REG_NUM:
-	case REG_HEX: {
-		uint32_t v0 = val[0];
-		uint32_t v;
-		v = nb == 1 ? v0 : (v0 << 16) + val[1];
-		if (reg->typ == REG_NUM) {
-			if (reg->div) {
-				int r = ((int) v) / reg->div;
-				int c = ((int) v) % reg->div;
-				if (c < 0)
-					c *= -1;
-				sprintf(vtxt, "%d.%d", r, c);
-			}
-			else {
-				sprintf(vtxt, "%d", (int) v);
-			}
-			if (reg->unit)
-				strcat(vtxt, reg->unit);
-		}
-		else {
-			nb = reg->size / 4;
-			if (nb > VALSIZE)
-				nb = 4;
-			if (!nb)
-				nb = 1;
-			sprintf(vtxt, "0x%0*x", nb, v);
-		}
-	        }
+		convert_num(vtxt, reg, val);
+		break;
+	case REG_HEX:
+		convert_hex(vtxt, reg, val);
 		break;
 	case REG_ASCII:
-		for (int i = 0; i < nb; ++i) {
-			vtxt[i] = i % 2 == 0 ?
-				(char) (val[i/2] >> 8) :
-				(char) val[i/2];
-		}
-
-		vtxt[2 * nb] = 0;
+		convert_txt(vtxt, reg, val);
 		break;
 	default:
 		printf("ERR - wrong register type %u\n", reg->typ);
