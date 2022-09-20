@@ -11,7 +11,7 @@
 
 enum {
 	VALSIZE    = 32,
-	VALPOS     = 70,
+	VALPOS     = 64,
 };
 
 enum reg_type {
@@ -558,16 +558,18 @@ static void print_reg(struct p17_register *reg, uint16_t *val)
 	if (reg->unit)
 		strcat(vtxt, reg->unit);
 
+	printf("%04u: ", reg->address);
 	p = reg->desc;
 	sz = strlen(p);
 	if (sz > VALPOS - 3) {
 		p = print_subline(reg->desc);
 		sz = strlen(p);
+		printf("      ");
 	}
 
 	memset(fill, 0, sizeof(fill));
 	memset(fill, ' ', VALPOS - sz);
-	printf("%04u: %s%s%s\n", reg->address, p, fill, vtxt);
+	printf("%s%s%s\n", p, fill, vtxt);
 /*        printf("   %04x\n", val[0]);*/
 }
 
