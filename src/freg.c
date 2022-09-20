@@ -361,7 +361,23 @@ struct p17_register registers[] = {
 {1238, 0, 16, REG_NUM, "The lower limit of solar minimum MPPT voltage", "V",
 	10, true, false},
 
+/* 19. PV model and rating information */
 
+{1003, 0, 64, REG_ASCII, "Series number", NULL, 0, true, false},
+{293, 0, 16, REG_NUM, "AC input rated frequency", "Hz", 10, false, false},
+{295, 0, 16, REG_NUM, "AC input rated current", "A", 10, true, false},
+{1162, 0, 16, REG_NUM, "Battery rated voltage", "V", 10, true, false},
+{1171, 0, 16, REG_NUM, "AC output rated voltage", "V", 10, false, false},
+{1172, 0, 16, REG_NUM, "AC output rated current", "A", 10, true, false},
+{1175, 0, 16, REG_NUM, "MPPT rated current per string", "A", 10, true, false},
+{1177, 0, 16, REG_NUM, "MPPT track number", NULL, 0, true, false},
+{1178, 0, 16, REG_ASCII, "Machine type", NULL, 0, true, false},
+{1179, 0, 16, REG_NUM, "Topology", NULL, 0, true, false},
+{1192, 0, 16, REG_NUM, "AC input rated voltage", "V", 10, true, false},
+{1200, 0, 16, REG_NUM, "Start power percentage of auto-adjusting", "%", 0,
+	false, false},
+{1201, 0, 16, REG_NUM, "Minmum PF value when power percentage reach 100%", "V",
+	100, false, false},
 
 };
 
@@ -381,7 +397,8 @@ struct p17_reg_group groups[] = {
 	{"15. MPPT information",        0x05cd},
 	{"16. Default information",     0x00b7},
 	{"17. Feeding wait time",       0x0120},
-	{"18. Getting range information", 0x00c6},
+	{"18. Getting range information",       0x00c6},
+	{"19. PV model and rating information", 0x03eb},
 };
 
 
@@ -527,7 +544,7 @@ static void print_reg(struct p17_register *reg, uint16_t *val)
 
 	memset(fill, 0, sizeof(fill));
 	memset(fill, ' ', VALPOS - sz);
-	printf("%s%s%s\n", p, fill, vtxt);
+	printf("%04u: %s%s%s\n", reg->address, p, fill, vtxt);
 /*        printf("   %04x\n", val[0]);*/
 }
 
