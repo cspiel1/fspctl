@@ -143,30 +143,59 @@ struct p17_register registers[] = {
 
 /* 6. Working status */
 {211, 0, 32, REG_NUM, "AC input active power R", "W", 0, true, false},
-{216, 0, 16, REG_NUM, "AC output voltage R", "V", 10, true, false},
-{247, 0, 16, REG_NUM, "AC output voltage S", "V", 10, true, false},
-{248, 0, 16, REG_NUM, "AC output voltage T", "V", 10, true, false},
+{257, 0, 32, REG_NUM, "AC input active power S", "W", 0, true, false},
+{259, 0, 32, REG_NUM, "AC input active power T", "W", 0, true, false},
+{377, 0, 32, REG_NUM, "AC input total active power", "W", 0, true, false},
+{798, 0, 16, REG_NUM, "AC input voltage R", "V", 10, true, false},
+{799, 0, 16, REG_NUM, "AC input voltage S", "V", 10, true, false},
+{800, 0, 16, REG_NUM, "AC input voltage T", "V", 10, true, false},
+{801, 0, 16, REG_NUM, "AC input frequency", "Hz", 100, true, false},
 
+{614, 0, 16, REG_NUM, "AC input current R", "A", 10, true, false},
+{616, 0, 16, REG_NUM, "AC input current S", "A", 10, true, false},
+{618, 0, 16, REG_NUM, "AC input current T", "A", 10, true, false},
+
+{903, 0, 1, REG_BOOL, "AC output connect status", NULL, 0, true, false},
 {217, 0, 32, REG_NUM, "AC output active power R", "W", 0, true, false},
 {241, 0, 32, REG_NUM, "AC output active power S", "W", 0, true, false},
 {243, 0, 32, REG_NUM, "AC output active power T", "W", 0, true, false},
 {245, 0, 32, REG_NUM, "AC output total active power", "W", 0, true, false},
+{864, 0, 16, REG_NUM, "AC output power percentage", "%", 0, true, false},
+{781, 0, 32, REG_NUM, "AC output apparent power R", "VA", 0, true, false},
+{894, 0, 32, REG_NUM, "AC output apparent power S", "VA", 0, true, false},
+{1241, 0, 32, REG_NUM, "AC output apparent power T", "VA", 0, true, false},
+
+{216, 0, 16, REG_NUM, "AC output voltage R", "V", 10, true, false},
+{247, 0, 16, REG_NUM, "AC output voltage S", "V", 10, true, false},
+{248, 0, 16, REG_NUM, "AC output voltage T", "V", 10, true, false},
 
 {219, 0, 16, REG_NUM, "AC output frequency", "Hz", 100, true, false},
 {220, 0, 16, REG_NUM, "AC output current R", "A", 10, true, false},
 {239, 0, 16, REG_NUM, "AC output current S", "A", 10, true, false},
 {240, 0, 16, REG_NUM, "AC output current T", "A", 10, true, false},
 
+{904, 8, 4, REG_HEX,  "Battery power direction", NULL, 0, true, false},
 {226, 0, 16, REG_NUM, "Battery capacity", "%", 0, true, false},
 {230, 0, 32, REG_NUM, "Battery current", "A", 10, true, false},
 {188, 0, 16, REG_NUM, "Battery voltage", "V", 10, true, false},
 {204, 0, 16, REG_NUM, "External battery temperature", NULL, 0, true, false},
 
+{903, 8, 1, REG_BOOL, "Solar input 1 work status", NULL, 0, true, false},
+{904, 0, 1, REG_BOOL, "Solar input 2 work status", NULL, 0, true, false},
 {228, 0, 32, REG_NUM, "Solar input power 1", "W", 0, true, false},
 {232, 0, 32, REG_NUM, "Solar input power 2", "W", 0, true, false},
 {234, 0, 16, REG_NUM, "Solar input voltage 1", "V", 10, true, false},
 {235, 0, 16, REG_NUM, "Solar input voltage 2", "V", 10, true, false},
 
+{696, 0, 16, REG_NUM, "Solar input current 1", "A", 10, true, false},
+{698, 0, 16, REG_NUM, "Solar input current 2", "A", 10, true, false},
+
+{905, 0, 4, REG_HEX,  "DC/AC power direction", NULL, 0, true, false},
+{905, 8, 4, REG_HEX,  "Line power direction", NULL, 0, true, false},
+
+{906, 0, 1, REG_BOOL, "Setting change bit flag", NULL, 0, true, false},
+
+{892, 0, 16, REG_NUM, "Inner temperature", NULL, 0, true, false},
 {237, 0, 16, REG_NUM, "Component max temperature", NULL, 0, true, false},
 
 };
@@ -178,7 +207,7 @@ struct p17_reg_group groups[] = {
 	{"3. Setting Energy priority",  0x0315},
 	{"4. Control Items",            0x001A},
 	{"5. Working mode",             0x03f2},
-	{"6. Working status",           0x00bc},
+	{"6. Working status",           0x00d3},
 	{"7. Time information",         0x0113},
 };
 
