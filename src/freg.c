@@ -300,6 +300,68 @@ struct p17_register registers[] = {
 	10, true, false},
 {1488, 0, 16, REG_NUM, "Default: AC input lowest voltage for feed power", "V",
 	10, true, false},
+{1489, 0, 16, REG_NUM, "Default: AC input highest frequency for feed power",
+	"Hz", 100, true, false},
+{1490, 0, 16, REG_NUM, "Default: AC input lowest frequency for feed power",
+	"Hz", 100, true, false},
+{1496, 0, 16, REG_NUM, "Default: Battery constant charge voltage(C.V.)",
+	"V", 10, true, false},
+
+/* 17. Feeding wait time */
+{288, 0, 16, REG_NUM, "The feeding wait time", "Sec", 0, false, false},
+
+
+/* 18. Getting range information */
+{198, 0, 16, REG_NUM, "The upper limit of AC input highest voltage for feed "
+	"power", "V", 10, true, false},
+{199, 0, 16, REG_NUM, "The lower limit of AC input highest voltage for feed "
+	"power", "V", 10, true, false},
+{200, 0, 16, REG_NUM, "The upper limit of AC input lowest voltage for feed "
+	"power", "V", 10, true, false},
+{201, 0, 16, REG_NUM, "The lower limit of AC input lowest voltage for feed "
+	"power", "V", 10, true, false},
+{202, 0, 16, REG_NUM, "The upper limit of AC input highest frequency for feed "
+	"power", "Hz", 100, true, false},
+{203, 0, 16, REG_NUM, "The lower limit of AC input highest frequency for feed "
+	"power", "Hz", 100, true, false},
+{263, 0, 16, REG_NUM, "The upper limit of battery charged voltage", "V", 10,
+	true, false},
+{264, 0, 16, REG_NUM, "The lower limit of battery charged voltage", "V", 10,
+	true, false},
+{265, 0, 16, REG_NUM, "The upper limit of battery Max. charged current", "A",
+	10, true, false},
+{266, 0, 16, REG_NUM, "The lower limit of battery Max. charged current", "A",
+	10, true, false},
+{267, 0, 16, REG_NUM, "The lower limit of solar minimum input voltage", "V",
+	10, true, false},
+{268, 0, 16, REG_NUM, "The upper limit of AC input lowest frequency for feed "
+	"power", "Hz", 100, true, false},
+{269, 0, 16, REG_NUM, "The lower limit of AC input lowest frequency for feed "
+	"power", "Hz", 100, true, false},
+{270, 0, 16, REG_NUM, "The upper limit of wait time for feed power", "Sec", 0,
+	true, false},
+{271, 0, 16, REG_NUM, "The lower limit of wait time for feed power", "Sec", 0,
+	true, false},
+{272, 0, 16, REG_NUM, "The upper limit of solar maximum input voltage", "V",
+	10, true, false},
+{273, 0, 16, REG_NUM, "The lower limit of solar maximum input voltage", "V",
+	10, true, false},
+{274, 0, 16, REG_NUM, "The upper limit of solar minimum input voltage", "V",
+	10, true, false},
+{365, 0, 32, REG_NUM, "The upper limit of maximum feeding power", "W", 0, true,
+	false},
+{367, 0, 32, REG_NUM, "The lower limit of maximum feeding power", "W", 0, true,
+	false},
+{1235, 0, 16, REG_NUM, "The upper limit of solar maximum MPPT voltage", "V",
+	10, true, false},
+{1236, 0, 16, REG_NUM, "The lower limit of solar maximum MPPT voltage", "V",
+	10, true, false},
+{1237, 0, 16, REG_NUM, "The upper limit of solar minimum MPPT voltage", "V",
+	10, true, false},
+{1238, 0, 16, REG_NUM, "The lower limit of solar minimum MPPT voltage", "V",
+	10, true, false},
+
+
 
 };
 
@@ -318,6 +380,8 @@ struct p17_reg_group groups[] = {
 	{"14. Battery information",     0x00f9},
 	{"15. MPPT information",        0x05cd},
 	{"16. Default information",     0x00b7},
+	{"17. Feeding wait time",       0x0120},
+	{"18. Getting range information", 0x00c6},
 };
 
 
