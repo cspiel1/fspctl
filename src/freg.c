@@ -200,8 +200,10 @@ struct p17_register registers[] = {
 {892, 0, 16, REG_NUM, "Inner temperature", NULL, 0, true, false},
 {237, 0, 16, REG_NUM, "Component max temperature", NULL, 0, true, false},
 
+/* 7. Time information */
 {275, 0, 112, REG_ASCII, "Time", NULL, 0, false, false},
 
+/* 11. CPU information */
 {992, 0, 16, REG_ASCII, "Protocol ID Inquiry", NULL, 0, true, false},
 {993, 0, 64, REG_ASCII, "Main CPU Firmware version", NULL, 0, true, false},
 {1180, 0, 64, REG_ASCII, "Secondary CPU Firmware version", NULL, 0, true,
@@ -209,6 +211,7 @@ struct p17_register registers[] = {
 {1042, 0, 112, REG_ASCII, "DSP Firmware Build date", NULL, 0, true, false},
 {1049, 0, 112, REG_ASCII, "MCU Firmware Build date", NULL, 0, true, false},
 
+/* 12. Output power */
 {1250, 0, 16, REG_NUM, "R phase Feeding grid calibration power",
 	NULL, 0, false, false},
 {1251, 0, 16, REG_NUM, "S phase Feeding grid calibration power",
@@ -221,8 +224,11 @@ struct p17_register registers[] = {
 	false},
 {861, 0, 16, REG_NUM, "Feed- in power factor", NULL, 0, false, false},
 
+/* 13. LCD sleep time */
 {1041, 0, 16, REG_NUM, "The LCD sleep time inquiry or set", NULL, 0, false,
 	false},
+
+/* 14. Battery information */
 {249, 0, 16, REG_NUM, "Battery stop charger current level in floating "
 	"charging", "A", 10, false, false},
 {250, 0, 16, REG_NUM, "Keep charged time of battery catch stopped charging "
@@ -253,7 +259,47 @@ struct p17_register registers[] = {
 	false},
 {1478, 0, 16, REG_NUM, "Battery type", NULL, 0, false, false},
 
+/* 15. MPPT information */
+{1485, 0, 16, REG_NUM, "Solar input MPPT highest voltage", "V", 10,
+	false, false},
+{1486, 0, 16, REG_NUM, "Solar input MPPT lowest voltage", "V", 10,
+	false, false},
 
+/* 16. Default information */
+{183, 0, 16, REG_NUM, "Default: Battery weak back voltage in hybrid mode", "V", 10,
+	true, false},
+{184, 0, 16, REG_NUM, "Default: Battery stop charger current level in floating "
+	"charging", "A", 10, true, false},
+{192, 0, 16, REG_NUM, "Default: Battery voltage of recover to charge when battery stop "
+	"charger in floating charging", "V", 10, true, false},
+{193, 0, 16, REG_NUM, "Default: Battery under back voltage", "V", 10, true, false},
+{194, 0, 16, REG_NUM, "Default: Battery float charge voltage", "V", 10, true, false},
+{195, 0, 16, REG_NUM, "Default: Battery weak voltage in hybrid mode", "V", 10, true,
+	false},
+{197, 0, 16, REG_NUM, "Default: Keep charged time of battery catch stop charger "
+	"current level", "Min", 0, true, false},
+{854, 0, 16, REG_NUM, "Default: The wait time for feed power", "Sec", 0, true, false},
+{866, 0, 16, REG_NUM, "Default: AC input long-time highest average voltage", "V", 10,
+	true, false},
+{1039, 0, 16, REG_NUM, "Default: Solar input highest voltage", "V", 10, true, false},
+{1040, 0, 16, REG_NUM, "Default: Solar input lowest voltage", "V", 10, true, false},
+{1194, 0, 16, REG_NUM, "Default: Solar input highest MPPT voltage", "V", 10, true,
+	false},
+{1195, 0, 16, REG_NUM, "Default: Solar input lowest MPPT voltage", "V", 10, true,
+	false},
+{1199, 0, 16, REG_NUM, "Default: LCD sleep wait time", NULL, 0, true, false},
+{1256, 0, 32, REG_ASCII, "Default: Start time for support loads", NULL, 0, true, false},
+{1258, 0, 32, REG_ASCII, "Default: Ending time for support loads", NULL, 0, true,
+	false},
+{1260, 0, 32, REG_ASCII, "Default: Start time for AC charger", NULL, 0, true, false},
+{1262, 0, 32, REG_ASCII, "Default: Ending time for AC charger", NULL, 0, true, false},
+{1460, 0, 16, REG_NUM, "Default: Battery maximum charge current", "A", 10,
+	true, false},
+{1477, 0, 16, REG_NUM, "Default: Battery under voltage", "V", 10, true, false},
+{1487, 0, 16, REG_NUM, "Default: AC input highest voltage for feed power", "V",
+	10, true, false},
+{1488, 0, 16, REG_NUM, "Default: AC input lowest voltage for feed power", "V",
+	10, true, false},
 
 };
 
@@ -270,6 +316,8 @@ struct p17_reg_group groups[] = {
 	{"12. Output power",            0x04E2},
 	{"13. LCD sleep time",          0x0411},
 	{"14. Battery information",     0x00f9},
+	{"15. MPPT information",        0x05cd},
+	{"16. Default information",     0x00b7},
 };
 
 
