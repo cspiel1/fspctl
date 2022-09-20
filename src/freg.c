@@ -164,6 +164,7 @@ struct p17_register registers[] = {
 {781, 0, 32, REG_NUM, "AC output apparent power R", "VA", 0, true, false},
 {894, 0, 32, REG_NUM, "AC output apparent power S", "VA", 0, true, false},
 {1241, 0, 32, REG_NUM, "AC output apparent power T", "VA", 0, true, false},
+{984, 0, 32, REG_NUM, "AC output total power", "VA", 0, true, false},
 
 {216, 0, 16, REG_NUM, "AC output voltage R", "V", 10, true, false},
 {247, 0, 16, REG_NUM, "AC output voltage S", "V", 10, true, false},
@@ -178,6 +179,7 @@ struct p17_register registers[] = {
 {226, 0, 16, REG_NUM, "Battery capacity", "%", 0, true, false},
 {230, 0, 32, REG_NUM, "Battery current", "A", 10, true, false},
 {188, 0, 16, REG_NUM, "Battery voltage", "V", 10, true, false},
+{1196, 0, 32, REG_NUM, "Battery power", "W", 0, true, false},
 {204, 0, 16, REG_NUM, "External battery temperature", NULL, 0, true, false},
 
 {903, 8, 8, REG_ASCII, "Solar input 1 work status", NULL, 0, true, false},
@@ -193,10 +195,65 @@ struct p17_register registers[] = {
 {905, 0, 8, REG_ASCII,  "DC/AC power direction", NULL, 0, true, false},
 {905, 8, 8, REG_ASCII,  "Line power direction", NULL, 0, true, false},
 
-{906, 0, 1, REG_BOOL, "Setting change bit flag", NULL, 0, true, false},
+{906, 0, 1, REG_BOOL, "Setting change bit flag", NULL, 0, false, false},
 
 {892, 0, 16, REG_NUM, "Inner temperature", NULL, 0, true, false},
 {237, 0, 16, REG_NUM, "Component max temperature", NULL, 0, true, false},
+
+{275, 0, 112, REG_ASCII, "Time", NULL, 0, false, false},
+
+{992, 0, 16, REG_ASCII, "Protocol ID Inquiry", NULL, 0, true, false},
+{993, 0, 64, REG_ASCII, "Main CPU Firmware version", NULL, 0, true, false},
+{1180, 0, 64, REG_ASCII, "Secondary CPU Firmware version", NULL, 0, true,
+	false},
+{1042, 0, 112, REG_ASCII, "DSP Firmware Build date", NULL, 0, true, false},
+{1049, 0, 112, REG_ASCII, "MCU Firmware Build date", NULL, 0, true, false},
+
+{1250, 0, 16, REG_NUM, "R phase Feeding grid calibration power",
+	NULL, 0, false, false},
+{1251, 0, 16, REG_NUM, "S phase Feeding grid calibration power",
+	NULL, 0, false, false},
+{1252, 0, 16, REG_NUM, "T phase Feeding grid calibration power",
+	NULL, 0, false, false},
+{1253, 0, 16, REG_NUM, "The max power limit to feed to grid",
+	NULL, 0, false, false},
+{1459, 0, 16, REG_NUM, "Feeding grid calibration power", NULL, 0, false,
+	false},
+{861, 0, 16, REG_NUM, "Feed- in power factor", NULL, 0, false, false},
+
+{1041, 0, 16, REG_NUM, "The LCD sleep time inquiry or set", NULL, 0, false,
+	false},
+{249, 0, 16, REG_NUM, "Battery stop charger current level in floating "
+	"charging", "A", 10, false, false},
+{250, 0, 16, REG_NUM, "Keep charged time of battery catch stopped charging "
+	"current level", "Min", 0, false, false},
+{251, 0, 16, REG_NUM, "Battery voltage of recover to charge when battery stop "
+	"charger in floating charging", "V", 10, false, false},
+{252, 0, 16, REG_NUM, "Battery under voltage", "V", 10, false, false},
+{253, 0, 16, REG_NUM, "Battery under back voltage", "V", 10, false, false},
+{254, 0, 16, REG_NUM, "Battery weak voltage in hybrid mode", "V", 10, false,
+	false},
+{282, 0, 16, REG_NUM, "Battery weak back voltage in hybrid mode", "V", 10,
+	false, false},
+{283, 0, 16, REG_NUM, "Battery max. discharge current in hybrid mode", "A", 10,
+	true, false},
+{285, 0, 16, REG_NUM, "AC charger keep battery voltage", "V", 10, false,
+	false},
+{286, 0, 16, REG_NUM, "Battery temperature sensor compensation", "mV", 10,
+	false, false},
+{287, 0, 16, REG_NUM, "Max. AC charging current", "A", 10, false, false},
+{606, 0, 112, REG_ASCII, "Battery install time", NULL, 0, false, false},
+{623, 0, 16, REG_NUM, "Battery constant charge voltage(C.V.)", "V", 10,
+	false, false},
+{624, 0, 16, REG_NUM, "Battery floating charge voltage", "V", 10,
+	false, false},
+{1240, 0, 16, REG_NUM, "Battery discharge max current in hybrid mode", "A", 0,
+	false, false},
+{1457, 0, 16, REG_NUM, "Battery maximum charge current", "A", 10, false,
+	false},
+{1478, 0, 16, REG_NUM, "Battery type", NULL, 0, false, false},
+
+
 
 };
 
@@ -209,6 +266,10 @@ struct p17_reg_group groups[] = {
 	{"5. Working mode",             0x03f2},
 	{"6. Working status",           0x00d3},
 	{"7. Time information",         0x0113},
+	{"11. CPU information",         0x03E0},
+	{"12. Output power",            0x04E2},
+	{"13. LCD sleep time",          0x0411},
+	{"14. Battery information",     0x00f9},
 };
 
 
