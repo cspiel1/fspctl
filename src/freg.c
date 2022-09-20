@@ -1,3 +1,4 @@
+#include <asm-generic/errno-base.h>
 #include <asm-generic/errno.h>
 #include <errno.h>
 #include <stdint.h>
@@ -34,6 +35,7 @@ struct p17_register {
 };
 
 struct p17_reg_group {
+	int id;
 	const char *name;
 	uint16_t address;
 };
@@ -119,6 +121,7 @@ struct p17_register registers[] = {
 {789, 0, 4, REG_HEX, "Solar energy distribution of priority", NULL, 0, false,
 	false},
 
+/* 4.Control Items */
 {26, 10, 1, REG_BOOL, "command for fault recovery", NULL, 0, false, false},
 
 {59, 15, 1, REG_BOOL, "Setting control parameter to default value", NULL, 0,
@@ -403,26 +406,49 @@ struct p17_register registers[] = {
 
 
 struct p17_reg_group groups[] = {
-	{"1. Warning items",            0x0000},
-	{"2. Enable/Disable items",     0x0002},
-	{"3. Setting Energy priority",  0x0315},
-	{"4. Control Items",            0x001A},
-	{"5. Working mode",             0x03f2},
-	{"6. Working status",           0x00d3},
-	{"7. Time information",         0x0113},
-	{"11. CPU information",         0x03E0},
-	{"12. Output power",            0x04E2},
-	{"13. LCD sleep time",          0x0411},
-	{"14. Battery information",     0x00f9},
-	{"15. MPPT information",        0x05cd},
-	{"16. Default information",     0x00b7},
-	{"17. Feeding wait time",       0x0120},
-	{"18. Getting range information",       0x00c6},
-	{"19. PV model and rating information", 0x03eb},
-	{"20. Set Allow AC-charging duration /Off-Peak duration", 0x0361},
-	{"21. Set AC Output ON/Off Timer",      0x0364},
+	{1, "1. Warning items",            0x0000},
+	{2, "2. Enable/Disable items",     0x0002},
+	{3, "3. Setting Energy priority",  0x0315},
+	{4, "4. Control Items",            0x001A},
+	{5, "5. Working mode",             0x03f2},
+	{6, "6. Working status",           0x00d3},
+	{7, "7. Time information",         0x0113},
+	{11, "11. CPU information",         0x03E0},
+	{12, "12. Output power",            0x04E2},
+	{13, "13. LCD sleep time",          0x0411},
+	{14, "14. Battery information",     0x00f9},
+	{15, "15. MPPT information",        0x05cd},
+	{16, "16. Default information",     0x00b7},
+	{17, "17. Feeding wait time",       0x0120},
+	{18, "18. Getting range information",       0x00c6},
+	{19, "19. PV model and rating information", 0x03eb},
+	{20, "20. Set Allow AC-charging duration /Off-Peak duration", 0x0361},
+	{21, "21. Set AC Output ON/Off Timer",      0x0364},
 
 };
+
+
+static int find_group(int group, uint16_t *begin, uint16_t *end)
+{
+	size_t n = ARRAY_SIZE(groups);
+	bool found = false;
+
+	for (size_t i = 0; i < n; ++i) {
+		struct p17_reg_group *g = &groups[i];
+
+		if (g->id == group) {
+			found = true;
+			*begin = g->address;
+			*end = UINT16_MAX;
+		}
+		else if (found) {
+			*end = g->address;
+			break;
+		}
+	}
+
+	return found ? 0 : ENOENT;
+}
 
 
 static void print_title(uint32_t address)
@@ -450,7 +476,7 @@ static const char *print_subline(const char *txt)
 	for (; p > txt && p[0]!=' '; --p)
 		--sz;
 
-	printf("%.*s\n", sz, txt);
+	printf("%.*s\n", (int) sz, txt);
 	sz = strlen(p);
 	if (sz > 1024) {
 		printf("ERR - description to long\n");
@@ -574,11 +600,12 @@ static void print_reg(struct p17_register *reg, uint16_t *val)
 }
 
 
-int print_all_registers(modbus_t *ctx)
+static int print_register_range(modbus_t *ctx, uint32_t begin, uint32_t end)
 {
 	size_t n = ARRAY_SIZE(registers);
 	uint32_t addr = UINT16_MAX;
 	uint16_t val[VALSIZE];
+	bool found = false;
 	int err = 0;
 
 	for (size_t i = 0; i < n; ++i) {
@@ -586,6 +613,13 @@ int print_all_registers(modbus_t *ctx)
 		int nb = reg->size / 16;
 		int mret = 0;
 
+		if (!found && reg->address != begin)
+			continue;
+
+		if (reg->address == end)
+			break;
+
+		found = true;
 		if (!nb)
 			nb = 1;
 
@@ -615,6 +649,12 @@ int print_all_registers(modbus_t *ctx)
 	}
 
 	return err;
+}
+
+
+int print_all_registers(modbus_t *ctx)
+{
+	return print_register_range(ctx, 0, UINT16_MAX);
 }
 
 
@@ -667,5 +707,19 @@ int print_register(modbus_t *ctx, int addr)
 		}
 	}
 
+	return err;
+}
+
+
+int print_group(modbus_t *ctx, int group)
+{
+	uint16_t begin, end;
+	int err;
+
+	err = find_group(group, &begin, &end);
+	if (err)
+		return err;
+
+	err = print_register_range(ctx, begin, end);
 	return err;
 }

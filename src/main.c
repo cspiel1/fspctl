@@ -16,9 +16,19 @@
 
 static void print_usage(const char *pname)
 {
-	printf("Usage:\n%s "
-			"[--set value] [--nomodbus] [address]"
-			"\n", pname);
+	printf("Usage:\n%s [options] [address]\n"
+		"Options:\n"
+		"--set value      The given value will be written to the \n"
+		"                 address, which is mandatory in this case.\n"
+		"\n"
+		"--nomodbus       For debugging/valgrind. No modbus connection"
+		"\n"
+		"                 is opened. \n"
+		"\n"
+		"--group id       The given group will be queried and printed."
+		"\n"
+		"                 Can't be combined with option --set."
+		"\n", pname);
 }
 
 
@@ -31,6 +41,7 @@ int main(int argc, char *argv[])
 	char fname[255];
 	bool set = false;
 	uint16_t setval;
+	int group = -1;
 	bool nomodbus = false;
 	int err;
 
@@ -44,11 +55,12 @@ int main(int argc, char *argv[])
 		int c;
 		static struct option long_options[] = {
 			{"set",       1, 0, 's'},
-			{"nomodbus",  1, 0, 'n'},
+			{"nomodbus",  0, 0, 'n'},
+			{"group",     1, 0, 'g'},
 			{0,           0, 0,   0}
 		};
 
-		c = getopt_long(argc, argv, "sn", long_options, NULL);
+		c = getopt_long(argc, argv, "sng:", long_options, NULL);
 		if (c == -1)
 			break;
 
@@ -60,6 +72,10 @@ int main(int argc, char *argv[])
 
 			case 'n':
 				nomodbus = true;
+				break;
+
+			case 'g':
+				group = atoi(optarg);
 				break;
 
 			default:
@@ -102,10 +118,12 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	if (addr == -1 )
-		ret = print_all_registers(ctx);
-	else
+	if (group >= 0)
+		ret = print_group(ctx, group);
+	else if (addr >= 0)
 		ret = print_register(ctx, addr);
+	else
+		ret = print_all_registers(ctx);
 
 	if(ret < 0) {
 		perror("modbus_read_regs error\n");
