@@ -155,7 +155,7 @@ struct p17_register registers[] = {
 {616, 0, 16, REG_NUM, "AC input current S", "A", 10, true, false},
 {618, 0, 16, REG_NUM, "AC input current T", "A", 10, true, false},
 
-{903, 0, 1, REG_BOOL, "AC output connect status", NULL, 0, true, false},
+{903, 0, 8, REG_ASCII, "AC output connect status", NULL, 0, true, false},
 {217, 0, 32, REG_NUM, "AC output active power R", "W", 0, true, false},
 {241, 0, 32, REG_NUM, "AC output active power S", "W", 0, true, false},
 {243, 0, 32, REG_NUM, "AC output active power T", "W", 0, true, false},
@@ -174,14 +174,14 @@ struct p17_register registers[] = {
 {239, 0, 16, REG_NUM, "AC output current S", "A", 10, true, false},
 {240, 0, 16, REG_NUM, "AC output current T", "A", 10, true, false},
 
-{904, 8, 4, REG_HEX,  "Battery power direction", NULL, 0, true, false},
+{904, 8, 8, REG_ASCII,  "Battery power direction", NULL, 0, true, false},
 {226, 0, 16, REG_NUM, "Battery capacity", "%", 0, true, false},
 {230, 0, 32, REG_NUM, "Battery current", "A", 10, true, false},
 {188, 0, 16, REG_NUM, "Battery voltage", "V", 10, true, false},
 {204, 0, 16, REG_NUM, "External battery temperature", NULL, 0, true, false},
 
-{903, 8, 1, REG_BOOL, "Solar input 1 work status", NULL, 0, true, false},
-{904, 0, 1, REG_BOOL, "Solar input 2 work status", NULL, 0, true, false},
+{903, 8, 8, REG_ASCII, "Solar input 1 work status", NULL, 0, true, false},
+{904, 0, 8, REG_ASCII, "Solar input 2 work status", NULL, 0, true, false},
 {228, 0, 32, REG_NUM, "Solar input power 1", "W", 0, true, false},
 {232, 0, 32, REG_NUM, "Solar input power 2", "W", 0, true, false},
 {234, 0, 16, REG_NUM, "Solar input voltage 1", "V", 10, true, false},
@@ -190,8 +190,8 @@ struct p17_register registers[] = {
 {696, 0, 16, REG_NUM, "Solar input current 1", "A", 10, true, false},
 {698, 0, 16, REG_NUM, "Solar input current 2", "A", 10, true, false},
 
-{905, 0, 4, REG_HEX,  "DC/AC power direction", NULL, 0, true, false},
-{905, 8, 4, REG_HEX,  "Line power direction", NULL, 0, true, false},
+{905, 0, 8, REG_ASCII,  "DC/AC power direction", NULL, 0, true, false},
+{905, 8, 8, REG_ASCII,  "Line power direction", NULL, 0, true, false},
 
 {906, 0, 1, REG_BOOL, "Setting change bit flag", NULL, 0, true, false},
 
@@ -306,12 +306,12 @@ static void convert_txt(char *txt,
 	nb = reg->size / 8;
 
 	for (int i = 0; i < nb; ++i) {
-		txt[i] = i % 2 == 0 ?
+		txt[i] = (i % 2 == 0) && (i + 1 < nb) ?
 			(char) (val[i/2] >> 8) :
 			(char) val[i/2];
 	}
 
-	txt[2 * nb] = 0;
+	txt[nb] = 0;
 }
 
 
@@ -411,10 +411,19 @@ int print_register(modbus_t *ctx, int addr)
 
 	for (size_t i = 0; i < n; ++i) {
 		struct p17_register *reg = &registers[i];
-		int nb = reg->size / 16;
+		int nb;
 		int mret;
 		if (reg->address != addr)
 			continue;
+
+		nb = reg->size / 16;
+		if (!nb)
+			nb = 1;
+		else if (nb > sizeof(val)) {
+			printf("ERR - register size %u to big for buffer\n",
+			       reg->size);
+			return EINVAL;
+		}
 
 		if (reg->wo) {
 			printf("ERR - Register 0x%04x is write only\n", addr);
