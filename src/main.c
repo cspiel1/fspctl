@@ -68,6 +68,8 @@ int main(int argc, char *argv[])
 		}
 	}
 
+	if (optind < argc)
+		addr = atoi(argv[optind]);
 
 	printf("Connecting to %s modbus slave %d\n",
 	       conf.ttydev, conf.slaveid);
