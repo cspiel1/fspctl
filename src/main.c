@@ -40,7 +40,8 @@ int main(int argc, char *argv[])
 	struct fconf conf;
 	char fname[255];
 	bool set = false;
-	uint16_t setval;
+	uint8_t bit = 0;
+	char setval[20];
 	int group = -1;
 	bool nomodbus = false;
 	int err;
@@ -55,19 +56,20 @@ int main(int argc, char *argv[])
 		int c;
 		static struct option long_options[] = {
 			{"set",       1, 0, 's'},
+			{"bit",       1, 0, 'b'},
 			{"nomodbus",  0, 0, 'n'},
 			{"group",     1, 0, 'g'},
 			{0,           0, 0,   0}
 		};
 
-		c = getopt_long(argc, argv, "sng:", long_options, NULL);
+		c = getopt_long(argc, argv, "s:ng:b:", long_options, NULL);
 		if (c == -1)
 			break;
 
 		switch (c) {
 			case 's':
 				set = true;
-				setval = (uint16_t) atoi(optarg);
+				strncpy(setval, optarg, sizeof(setval));
 				break;
 
 			case 'n':
@@ -77,6 +79,9 @@ int main(int argc, char *argv[])
 			case 'g':
 				group = atoi(optarg);
 				break;
+
+			case 'b':
+				bit = (uint8_t) atoi(optarg);
 
 			default:
 				print_usage(argv[0]);
@@ -94,7 +99,7 @@ int main(int argc, char *argv[])
 		ctx = modbus_new_rtu(conf.ttydev, 19200, 'N', 8, conf.stopbits);
 		if (ctx == NULL) {
 			perror("Unable to create the libmodbus context\n");
-			return -1;
+			goto out;
 		}
 
 		/*        ret = modbus_set_debug(ctx, TRUE);*/
@@ -102,36 +107,43 @@ int main(int argc, char *argv[])
 		ret = modbus_rtu_set_serial_mode(ctx, MODBUS_RTU_RS232);
 		if(ret < 0){
 			perror("modbus_rtu_set_serial_mode error\n");
-			return -1;
+			goto out;
 		}
 
 		ret = modbus_connect(ctx);
 		if(ret < 0){
 			perror("modbus_connect error\n");
-			return -1;
+			goto out;
 		}
 
 		ret = modbus_set_slave(ctx, conf.slaveid);
 		if(ret < 0) {
 			perror("modbus_set_slave error\n");
-			return -1;
+			goto out;
 		}
 	}
 
-	if (group >= 0)
-		ret = print_group(ctx, group);
-	else if (addr >= 0)
-		ret = print_register(ctx, addr);
-	else
-		ret = print_all_registers(ctx);
-
-	if(ret < 0) {
-		perror("modbus_read_regs error\n");
-		return -1;
+	if (group >= 0) {
+		err = print_group(ctx, group);
+	}
+	else if (set && addr >= 0) {
+		err = register_write(ctx, addr, bit, setval);
+	}
+	else if (addr >= 0) {
+		err = print_register(ctx, addr);
+	}
+	else {
+		err = print_all_registers(ctx);
 	}
 
+out:
 	modbus_close(ctx);
 	modbus_free(ctx);
 
 	free_fconfig(&conf);
+
+	if (!err && ret < 0)
+		err = EIO;
+
+	return err;
 }

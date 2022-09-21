@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #include <modbus.h>
 
 #include "futil.h"
@@ -554,6 +555,23 @@ static void convert_txt(char *txt,
 }
 
 
+static struct p17_register *find_register(int addr, int bit)
+{
+	size_t n = ARRAY_SIZE(registers);
+	struct p17_register *reg;
+
+	for (size_t i = 0; i < n; ++i) {
+		reg = &registers[i];
+		if (reg->address != addr || reg->bit != bit)
+			continue;
+
+		return reg;
+	}
+
+	return NULL;
+}
+
+
 static void print_reg(struct p17_register *reg, uint16_t *val)
 {
 	char fill[VALPOS];
@@ -721,5 +739,202 @@ int print_group(modbus_t *ctx, int group)
 		return err;
 
 	err = print_register_range(ctx, begin, end);
+	return err;
+}
+
+
+static int write_bool(modbus_t *ctx, const struct p17_register *reg,
+		      const char *val)
+{
+	uint16_t v;
+	bool set;
+	int ret;
+
+	if (!ctx)
+		return EINVAL;
+
+	if (reg->typ != REG_BOOL)
+		return EINVAL;
+
+	if (!val) {
+		printf("ERR - Value empty\n");
+		return EINVAL;
+	}
+
+	v = (1 << reg->bit);
+	set = atoi(val) ? true : false;
+	if (set)
+		v = ~v;
+
+	printf("INF - Writing 0x%04x to  %d:'%s'\n", v, reg->address,
+	       reg->desc);
+	return 0;
+	ret = modbus_write_register(ctx, reg->address, v);
+	if (ret == -1)
+		return EIO;
+
+	return 0;
+}
+
+
+static int write_num(modbus_t *ctx, const struct p17_register *reg,
+		     const char *val)
+{
+	double vd;
+	int32_t vi;
+	uint32_t vu;
+	uint16_t v[2];
+	int nb = 1;
+	int ret;
+
+	if (!ctx)
+		return EINVAL;
+
+	if (reg->typ != REG_NUM)
+		return EINVAL;
+
+	if (!val) {
+		printf("ERR - Value empty\n");
+		return EINVAL;
+	}
+
+	if (reg->bit != 0) {
+		printf("ERR - Writing to numeric to register %u to bit %u "
+		       "not supported\n", reg->address, reg->bit);
+		return EINVAL;
+	}
+
+	if (reg->size != 16 && reg->size != 32) {
+		printf("ERR - Writing to numeric register with bit size %u not"
+		       " supported\n", reg->size);
+		return EINVAL;
+	}
+
+	vd = atof(val);
+	printf("INF - vd=%lf\n", vd);
+	if (reg->div)
+		vd *= reg->div;
+
+	vi = (int32_t) vd;
+	vu = (uint32_t) vi;
+	if (reg->size == 16 && (vu & 0xffff0000)) {
+		printf("ERR - Writing %s = %u to 16 bit register not "
+		       "supported\n", val, vu);
+		return EINVAL;
+	}
+
+	nb = reg->size / 16;
+	if (nb == 2) {
+		v[0] = (vu >> 16);
+		v[1] = (uint16_t) (0x0000ffff & vu);
+	}
+	else {
+		v[0] = vu;
+		v[1] = 0;
+	}
+
+	if (nb == 1) {
+		printf("INF - Writing %u=0x%04x to %d:'%s'\n", v[0], v[0],
+		       reg->address, reg->desc);
+	}
+	else if (nb == 2) {
+		printf("INF - Writing 0x%04x %04x to  %d:'%s'\n",
+		       v[0], v[1], reg->address, reg->desc);
+	}
+	else {
+		printf("ERR - Do not write %u registers\n", nb);
+		return EINVAL;
+	}
+
+	ret = modbus_write_registers(ctx, reg->address, nb, v);
+	if (ret == -1)
+		return EIO;
+
+	return 0;
+}
+
+
+static int write_ascii(modbus_t *ctx, const struct p17_register *reg,
+		       const char *val)
+{
+	uint16_t v[VALSIZE];
+	int nb = 1;
+	size_t len;
+	int ret;
+
+	if (!ctx)
+		return EINVAL;
+
+	if (reg->typ != REG_ASCII)
+		return EINVAL;
+
+	if (!val) {
+		printf("ERR - Value empty\n");
+		return EINVAL;
+	}
+
+	if (reg->bit != 0) {
+		printf("ERR - Writing to ASCII to register %u to bit %u "
+		       "not supported\n", reg->address, reg->bit);
+		return EINVAL;
+	}
+
+	len = strlen(val);
+	if (len > reg->size / 8) {
+		printf("ERR - Will not write %lu characters to %u bit "
+		       "register\n", len, reg->size);
+		return EINVAL;
+	}
+
+	nb = reg->size / 16;
+	for (int i = 0; i < nb; ++i) {
+		if (2*i < len)
+			v[i] = ((uint16_t) val[2*i]) << 8;
+		else
+			v[i] = ((uint16_t) ' ') << 8;
+
+		if (2*i + 1 < len)
+			v[i] |= ((uint16_t) val[2*i + 1]);
+		else
+			v[i] |= (uint16_t) ' ';
+	}
+
+	ret = modbus_write_registers(ctx, reg->address, nb, v);
+	if (ret == -1)
+		return EIO;
+
+	return 0;
+}
+
+
+int register_write(modbus_t *ctx, int addr, uint8_t bit, const char *val)
+{
+	const struct p17_register *reg;
+	int err;
+
+	if (!ctx || !val)
+		return EINVAL;
+
+	reg = find_register(addr, bit);
+	if (!reg)
+		return ENOENT;
+
+	switch (reg->typ) {
+		case REG_BOOL:
+			err = write_bool(ctx, reg, val);
+		break;
+		case REG_NUM:
+			err = write_num(ctx, reg, val);
+		break;
+		case REG_ASCII:
+			err = write_ascii(ctx, reg, val);
+		break;
+		case REG_HEX:
+			printf("ERR - Writing to hex register not "
+			       "supported\n");
+			err = EINVAL;
+		break;
+	}
+
 	return err;
 }
