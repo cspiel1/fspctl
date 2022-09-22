@@ -14,12 +14,24 @@
 #include "fconf.h"
 #include "freg.h"
 
+static bool run = false;
+
+static void signal_handler(int sig)
+{
+	run = false;
+}
+
+(void)signal(SIGINT, signal_handler);
+(void)signal(SIGALRM, signal_handler);
+(void)signal(SIGTERM, signal_handler);
+
 static void print_usage(const char *pname)
 {
 	printf("Usage:\n%s [options] [address]\n"
 		"Options:\n"
 		"--set value      The given value will be written to the \n"
 		"                 address, which is mandatory in this case.\n"
+		"--bit pos        The bit position for boolean set.\n"
 		"\n"
 		"--nomodbus       For debugging/valgrind. No modbus connection"
 		"\n"
@@ -59,10 +71,11 @@ int main(int argc, char *argv[])
 			{"bit",       1, 0, 'b'},
 			{"nomodbus",  0, 0, 'n'},
 			{"group",     1, 0, 'g'},
+			{"daemon",    0, 0, 'd'},
 			{0,           0, 0,   0}
 		};
 
-		c = getopt_long(argc, argv, "s:ng:b:", long_options, NULL);
+		c = getopt_long(argc, argv, "s:ng:b:d", long_options, NULL);
 		if (c == -1)
 			break;
 
@@ -70,6 +83,10 @@ int main(int argc, char *argv[])
 			case 's':
 				set = true;
 				strncpy(setval, optarg, sizeof(setval));
+				break;
+
+			case 'd':
+				run = true;
 				break;
 
 			case 'n':
@@ -82,7 +99,7 @@ int main(int argc, char *argv[])
 
 			case 'b':
 				bit = (uint8_t) atoi(optarg);
-
+				break;
 			default:
 				print_usage(argv[0]);
 				return EINVAL;
@@ -130,7 +147,10 @@ int main(int argc, char *argv[])
 		err = register_write(ctx, addr, bit, setval);
 	}
 	else if (addr >= 0) {
-		err = print_register(ctx, addr);
+		while (run) {
+			err = print_register(ctx, addr);
+			sleep(5);
+		}
 	}
 	else {
 		err = print_all_registers(ctx);

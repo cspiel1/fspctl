@@ -602,13 +602,13 @@ static void print_reg(struct p17_register *reg, uint16_t *val)
 	if (reg->unit)
 		strcat(vtxt, reg->unit);
 
-	printf("%04u: ", reg->address);
+	printf("%04u : ", reg->address);
 	p = reg->desc;
 	sz = strlen(p);
 	if (sz > VALPOS - 3) {
 		p = print_subline(reg->desc);
 		sz = strlen(p);
-		printf("      ");
+		printf("       ");
 	}
 
 	memset(fill, 0, sizeof(fill));
@@ -768,7 +768,6 @@ static int write_bool(modbus_t *ctx, const struct p17_register *reg,
 
 	printf("INF - Writing 0x%04x to  %d:'%s'\n", v, reg->address,
 	       reg->desc);
-	return 0;
 	ret = modbus_write_register(ctx, reg->address, v);
 	if (ret == -1)
 		return EIO;
