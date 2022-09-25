@@ -9,6 +9,10 @@
 #include <modbus.h>
 
 #include "futil.h"
+#include "fconf.h"
+#ifdef USE_MQTT
+#include "fmqtt.h"
+#endif
 #include "freg.h"
 
 enum {
@@ -109,13 +113,13 @@ struct p17_register registers[] = {
 	false},
 {7, 15, 1, REG_BOOL, "Enable/disable charge battery", NULL, 0, false, false},
 
-{291, 0, 1, REG_BOOL, "Set enable/disable machine supply power to the loads",
+{291, 0, 16, REG_NUM, "Set enable/disable machine supply power to the loads",
 	NULL, 0, false, true},
 
-{292, 0, 1, REG_BOOL, "Enable/disable auto adjust PF according to Feed power",
+{292, 0, 16, REG_NUM, "Enable/disable auto adjust PF according to Feed power",
 	NULL, 0, false, false},
 
-{284, 0, 1, REG_BOOL, "Enable/disable AC charger keep battery voltage "
+{284, 0, 16, REG_NUM, "Enable/disable AC charger keep battery voltage "
 	"function", NULL, 0, false, false},
 
 /* 3. Setting Energy priority */
@@ -199,7 +203,7 @@ struct p17_register registers[] = {
 {905, 0, 8, REG_ASCII,  "DC/AC power direction", NULL, 0, true, false},
 {905, 8, 8, REG_ASCII,  "Line power direction", NULL, 0, true, false},
 
-{906, 0, 1, REG_BOOL, "Setting change bit flag", NULL, 0, false, false},
+{906, 0, 16, REG_NUM, "Setting change bit flag", NULL, 0, false, false},
 
 {892, 0, 16, REG_NUM, "Inner temperature", NULL, 0, true, false},
 {237, 0, 16, REG_NUM, "Component max temperature", NULL, 0, true, false},
@@ -428,6 +432,7 @@ struct p17_reg_group groups[] = {
 
 };
 
+typedef void (print_reg_h)(struct p17_register *reg, uint16_t *val, void *arg);
 
 static int find_group(int group, uint16_t *begin, uint16_t *end)
 {
@@ -450,6 +455,20 @@ static int find_group(int group, uint16_t *begin, uint16_t *end)
 
 	return found ? 0 : ENOENT;
 }
+
+
+#ifdef USE_MQTT
+static bool use_mqtt(const struct fconf *conf)
+{
+	if (!conf)
+		return false;
+
+	if (conf->mqtthost)
+		return true;
+
+	return false;
+}
+#endif
 
 
 static void print_title(uint32_t address)
@@ -572,13 +591,9 @@ static struct p17_register *find_register(int addr, int bit)
 }
 
 
-static void print_reg(struct p17_register *reg, uint16_t *val)
+static int convert_reg(char *vtxt, struct p17_register *reg,
+			       uint16_t *val)
 {
-	char fill[VALPOS];
-	char vtxt[VALSIZE * 2 + 1];
-	const char *p;
-	size_t sz;
-
 	switch (reg->typ) {
 	case REG_BOOL:
 		sprintf(vtxt, "%s", (((uint16_t) 1) << reg->bit) & *val ?
@@ -595,9 +610,26 @@ static void print_reg(struct p17_register *reg, uint16_t *val)
 		break;
 	default:
 		printf("ERR - wrong register type %u\n", reg->typ);
-		return;
+		return EINVAL;
 		break;
 	}
+
+	return 0;
+}
+
+
+static void print_reg(struct p17_register *reg, uint16_t *val, void *arg)
+{
+	char fill[VALPOS];
+	char vtxt[VALSIZE * 2 + 1];
+	const char *p;
+	size_t sz;
+	int err;
+	(void)arg;
+
+	err = convert_reg(vtxt, reg, val);
+	if (err)
+		return;
 
 	if (reg->unit)
 		strcat(vtxt, reg->unit);
@@ -663,7 +695,7 @@ static int print_register_range(modbus_t *ctx, uint32_t begin, uint32_t end)
 			}
 		}
 
-		print_reg(reg, val);
+		print_reg(reg, val, NULL);
 	}
 
 	return err;
@@ -676,7 +708,8 @@ int print_all_registers(modbus_t *ctx)
 }
 
 
-int print_register(modbus_t *ctx, int addr)
+static int print_register_priv(modbus_t *ctx, int addr, int8_t bit,
+			       print_reg_h *ph, void *arg)
 {
 	size_t n = ARRAY_SIZE(registers);
 	uint16_t val[VALSIZE];
@@ -688,6 +721,9 @@ int print_register(modbus_t *ctx, int addr)
 		struct p17_register *reg = &registers[i];
 		int nb;
 		if (reg->address != addr)
+			continue;
+
+		if (bit >= 0 && bit != (int8_t) reg->bit)
 			continue;
 
 		nb = reg->size / 16;
@@ -706,6 +742,7 @@ int print_register(modbus_t *ctx, int addr)
 
 		if (!read) {
 			read = true;
+
 			mret = modbus_read_registers(ctx, addr, nb, val);
 			if (ctx && mret == -1) {
 				perror("ERR - modbus read error\n");
@@ -714,7 +751,7 @@ int print_register(modbus_t *ctx, int addr)
 			}
 		}
 
-		print_reg(reg, val);
+		ph(reg, val, arg);
 	}
 
 	if (!err && !read) {
@@ -726,6 +763,12 @@ int print_register(modbus_t *ctx, int addr)
 	}
 
 	return err;
+}
+
+
+int print_register(modbus_t *ctx, int addr, int8_t bit)
+{
+	return print_register_priv(ctx, addr, bit, print_reg, NULL);
 }
 
 
@@ -763,7 +806,7 @@ static int write_bool(modbus_t *ctx, const struct p17_register *reg,
 
 	v = (1 << reg->bit);
 	set = atoi(val) ? true : false;
-	if (set)
+	if (!set)
 		v = ~v;
 
 	printf("INF - Writing 0x%04x to  %d:'%s'\n", v, reg->address,
@@ -933,6 +976,73 @@ int register_write(modbus_t *ctx, int addr, uint8_t bit, const char *val)
 			       "supported\n");
 			err = EINVAL;
 		break;
+	}
+
+	return err;
+}
+
+
+struct publish_st {
+	const char *category;
+	const char *field;
+};
+
+
+#ifdef USE_MQTT
+static void publish_reg_handler(struct p17_register *reg, uint16_t *val,
+				void *arg)
+{
+	int err;
+	struct publish_st *pub = arg;
+	char vtxt[VALSIZE * 2 + 1];
+
+	err = convert_reg(vtxt, reg, val);
+	if (err)
+		return;
+
+	fmqtt_publish(pub->field, pub->category, vtxt);
+}
+#endif
+
+
+int publish_registers(modbus_t *ctx, struct fconf *conf)
+{
+	int err = 0;
+
+	for (size_t i = 0; i < ARRAY_SIZE(conf->publish); ++i) {
+		int addr;
+		int bit;
+		char category[21];
+		char field[21];
+#ifdef USE_MQTT
+		struct publish_st pub = {category, field};
+#endif
+		int n;
+
+		if (!conf->publish[i])
+			break;
+
+		n = sscanf(conf->publish[i], "%d %d %20s %20s", &addr, &bit,
+			   category, field);
+		if (n != 4) {
+			printf("ERR - could not parse publish%u \"%s\" \n",
+			       (uint8_t) i, conf->publish[i]);
+			err = EINVAL;
+			break;
+		}
+
+		err = print_register_priv(ctx, addr, (int8_t) bit,
+#ifdef USE_MQTT
+			  (use_mqtt(conf) ? publish_reg_handler : print_reg),
+			  &pub
+#else
+			  print_reg, NULL
+#endif
+			  );
+		if (err) {
+			printf("ERR - Could'nt read register %d\n", addr);
+			break;
+		}
 	}
 
 	return err;

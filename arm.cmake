@@ -9,8 +9,10 @@ SET(CMAKE_SYSTEM_PROCESSOR "arm")
 SET(CMAKE_C_COMPILER   $ENV{HOME}/arm/.build/arm-cortex_a8-linux-gnueabihf/buildtools/bin/arm-cortex_a8-linux-gnueabihf-gcc)
 
 # where is the target environment 
+SET(CMAKE_SYSROOT  $ENV{HOME}/arm/rootfs)
 SET(CMAKE_FIND_ROOT_PATH  $ENV{HOME}/arm/rootfs $ENV{HOME}/arm/staging)
 set(ENV{PKG_CONFIG_PATH} "$ENV{HOME}/arm/staging/lib/pkgconfig")
+set(ENV{LIBPATH} "$ENV{HOME}/arm/rootfs/usr/lib")
 
 # search for programs in the build host directories
 SET(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)

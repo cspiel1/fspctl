@@ -3,6 +3,7 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <stdbool.h>
 
 #include "futil.h"
 #include "fconf.h"
@@ -33,8 +34,11 @@ static int set_str(struct fconf *conf, int vidx, const char *val)
 {
 	char **p;
 
-	if (!conf || !val)
+	if (!conf)
 		return EINVAL;
+
+	if (!val)
+		return 0;
 
 	p = (char **) (((uint8_t *) conf) + vidx);
 	*p = strdup(val);
@@ -130,6 +134,22 @@ struct confkey confkeys[] = {
 {"ttydev",   CONF_STR, FCONF_VIDX(ttydev),   "/dev/ttyUSB0",    0},
 {"stopbits", CONF_INT, FCONF_VIDX(stopbits),           NULL,    2},
 {"slaveid",  CONF_INT, FCONF_VIDX(slaveid),            NULL,   10},
+{"mqtthost", CONF_STR, FCONF_VIDX(mqtthost), "mqtt.host.org",   0},
+{"mqttport", CONF_INT, FCONF_VIDX(mqttport),           NULL,   1883},
+{"mqttuser", CONF_STR, FCONF_VIDX(mqttuser),           NULL,    0},
+{"mqttpass", CONF_STR, FCONF_VIDX(mqttpass),           NULL,    0},
+{"capath",   CONF_STR, FCONF_VIDX(capath),             NULL,    0},
+{"cafile",   CONF_STR, FCONF_VIDX(cafile),             NULL,    0},
+{"publish0", CONF_STR, FCONF_VIDX(publish[0]),      "topic0",   0},
+{"publish1", CONF_STR, FCONF_VIDX(publish[1]),      "topic1",   0},
+{"publish2", CONF_STR, FCONF_VIDX(publish[2]),      "topic2",   0},
+{"publish3", CONF_STR, FCONF_VIDX(publish[3]),      "topic3",   0},
+{"publish4", CONF_STR, FCONF_VIDX(publish[4]),      "topic4",   0},
+{"publish5", CONF_STR, FCONF_VIDX(publish[5]),      "topic5",   0},
+{"publish6", CONF_STR, FCONF_VIDX(publish[6]),      "topic6",   0},
+{"publish7", CONF_STR, FCONF_VIDX(publish[7]),      "topic7",   0},
+{"publish8", CONF_STR, FCONF_VIDX(publish[8]),      "topic8",   0},
+{"publish9", CONF_STR, FCONF_VIDX(publish[9]),      "topic9",   0},
 
 };
 
@@ -149,7 +169,7 @@ static char *find_begin(char *start)
 }
 
 
-static char *find_end(char *start)
+static char *find_end(char *start, bool eol)
 {
 	char *e;
 
@@ -157,8 +177,14 @@ static char *find_end(char *start)
 		return NULL;
 
 	e = start;
-	while (e[0] != ' ' && e[0] != 0 && e[0] != '\n' && e[0] != '\r')
+	while ((eol || e[0] != ' ') &&
+	       e[0] != 0 &&
+	       e[0] != '\n' &&
+	       e[0] != '\r')
 		++e;
+
+	while (eol && e > start && (e - 1)[0] == ' ')
+		--e;
 
 	e[0] = 0;
 	if(e == start)
@@ -182,12 +208,12 @@ static int conf_proc_line(struct fconf *conf, const char *line)
 		return ENOMEM;
 
 	key = find_begin(buf);
-	e   = find_end(key);
+	e   = find_end(key, false);
 	if (e==NULL)
 		return 0;
 
 	val = find_begin(++e);
-	e   = find_end(val);
+	e   = find_end(val, true);
 	if (e==NULL)
 		return 0;
 

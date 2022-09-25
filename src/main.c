@@ -13,6 +13,7 @@
 #include "futil.h"
 #include "fconf.h"
 #include "freg.h"
+#include "fmqtt.h"
 
 static bool run = false;
 
@@ -21,25 +22,31 @@ static void signal_handler(int sig)
 	run = false;
 }
 
-(void)signal(SIGINT, signal_handler);
-(void)signal(SIGALRM, signal_handler);
-(void)signal(SIGTERM, signal_handler);
 
 static void print_usage(const char *pname)
 {
 	printf("Usage:\n%s [options] [address]\n"
 		"Options:\n"
-		"--set value      The given value will be written to the \n"
-		"                 address, which is mandatory in this case.\n"
-		"--bit pos        The bit position for boolean set.\n"
+		"-s, --set=value\n"
+		"       The given value will be written to the address, which "
+		"       is mandatory in this case.\n"
 		"\n"
-		"--nomodbus       For debugging/valgrind. No modbus connection"
+		"-b, --bit=pos\n"
+		"       The bit position for boolean set.\n"
 		"\n"
-		"                 is opened. \n"
+		"-d, --daemon\n"
+		"       Start daemon that polls configured registers and "
+			"sends to MQTT broker.\n"
+		"       If broker is not configured the values are printed to "
+			"stdout.\n"
 		"\n"
-		"--group id       The given group will be queried and printed."
+		"-n, --nomodbus\n"
+		"       For debugging/valgrind. No modbus connection is "
+			"opened. \n"
 		"\n"
-		"                 Can't be combined with option --set."
+		"-g , --group id\n"
+		"       The given group will be queried and printed. Can't be "
+		"       combined with option --set."
 		"\n", pname);
 }
 
@@ -52,7 +59,7 @@ int main(int argc, char *argv[])
 	struct fconf conf;
 	char fname[255];
 	bool set = false;
-	uint8_t bit = 0;
+	int8_t bit = -1;
 	char setval[20];
 	int group = -1;
 	bool nomodbus = false;
@@ -98,7 +105,7 @@ int main(int argc, char *argv[])
 				break;
 
 			case 'b':
-				bit = (uint8_t) atoi(optarg);
+				bit = (int8_t) atoi(optarg);
 				break;
 			default:
 				print_usage(argv[0]);
@@ -140,17 +147,59 @@ int main(int argc, char *argv[])
 		}
 	}
 
+	(void)signal(SIGINT, signal_handler);
+	(void)signal(SIGALRM, signal_handler);
+	(void)signal(SIGTERM, signal_handler);
+
 	if (group >= 0) {
 		err = print_group(ctx, group);
 	}
 	else if (set && addr >= 0) {
+		if (bit == -1)
+			bit = 0;
+
 		err = register_write(ctx, addr, bit, setval);
 	}
-	else if (addr >= 0) {
-		while (run) {
-			err = print_register(ctx, addr);
-			sleep(5);
+	else if (run) {
+		bool mqtt = conf.mqtthost != NULL;
+		uint64_t ms = tmr_jiffies();
+
+		if (mqtt) {
+			err = fmqtt_init(&conf);
+			if (err)
+				goto out;
 		}
+
+		while (run) {
+			if (mqtt)
+				err = fmqtt_loop();
+
+			if (err)
+				break;
+
+			if (tmr_jiffies() > ms) {
+				ms += 5000;
+
+				/* overrun? */
+				if (ms < tmr_jiffies())
+					ms = tmr_jiffies() + 5000;
+
+				err = publish_registers(ctx, &conf);
+			}
+
+			if (err)
+				break;
+
+			if (usleep(10000)==-1)
+				break;
+		}
+
+		run = false;
+		if (mqtt)
+			fmqtt_close();
+	}
+	else if (addr >= 0) {
+		err = print_register(ctx, addr, bit);
 	}
 	else {
 		err = print_all_registers(ctx);
