@@ -982,25 +982,19 @@ int register_write(modbus_t *ctx, int addr, uint8_t bit, const char *val)
 }
 
 
-struct publish_st {
-	const char *category;
-	const char *field;
-};
-
-
 #ifdef USE_MQTT
 static void publish_reg_handler(struct p17_register *reg, uint16_t *val,
 				void *arg)
 {
 	int err;
-	struct publish_st *pub = arg;
+	const char *topic = arg;
 	char vtxt[VALSIZE * 2 + 1];
 
 	err = convert_reg(vtxt, reg, val);
 	if (err)
 		return;
 
-	fmqtt_publish(pub->field, pub->category, vtxt);
+	fmqtt_publish(topic, vtxt);
 }
 #endif
 
@@ -1012,18 +1006,13 @@ int publish_registers(modbus_t *ctx, struct fconf *conf)
 	for (size_t i = 0; i < ARRAY_SIZE(conf->publish); ++i) {
 		int addr;
 		int bit;
-		char category[21];
-		char field[21];
-#ifdef USE_MQTT
-		struct publish_st pub = {category, field};
-#endif
+		char topic[41];
 		int n;
 
 		if (!conf->publish[i])
 			break;
 
-		n = sscanf(conf->publish[i], "%d %d %20s %20s", &addr, &bit,
-			   category, field);
+		n = sscanf(conf->publish[i], "%d %d %40s", &addr, &bit, topic);
 		if (n != 4) {
 			printf("ERR - could not parse publish%u \"%s\" \n",
 			       (uint8_t) i, conf->publish[i]);
@@ -1034,7 +1023,7 @@ int publish_registers(modbus_t *ctx, struct fconf *conf)
 		err = print_register_priv(ctx, addr, (int8_t) bit,
 #ifdef USE_MQTT
 			  (use_mqtt(conf) ? publish_reg_handler : print_reg),
-			  &pub
+			  topic
 #else
 			  print_reg, NULL
 #endif

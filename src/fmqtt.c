@@ -150,16 +150,13 @@ void fmqtt_close(void)
 }
 
 
-int fmqtt_publish(const char *field, const char *category,
-		  const char *fmt, ...)
+int fmqtt_publish(const char *topic, const char *fmt, ...)
 {
-	char topic[65];
 	char payload[65];
 	va_list va;
 	int err = 0;
 	int merr;
 
-	snprintf(topic, sizeof(topic), "pv/inverter/%s/%s", category, field);
 	va_start(va, fmt);
 	vsnprintf(payload, sizeof(payload), fmt, va);
 	va_end(va);
