@@ -13,10 +13,10 @@ Configuration
 On first start fspctl writes a configuration template to ~/.config/.fspctl
 
 ```
-ttydev    "/dev/ttyUSB0"
+ttydev     /dev/ttyUSB0
 stopbits   2
 slaveid    10
-mqtthost  "mqtt.host.org"
+mqtthost   mqtt.host.org
 mqttport   1883
 mqttuser   user
 mqttpass   ***
