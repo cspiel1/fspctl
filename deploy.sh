@@ -1,1 +1,1 @@
-scp buildarm/fspctl root@fspctl:/usr/local/bin
+rsync -vc buildarm/fspctl root@fspctl:/usr/local/bin
