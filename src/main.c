@@ -44,10 +44,12 @@ static void print_usage(const char *pname)
 		"       For debugging/valgrind. No modbus connection is "
 			"opened. \n"
 		"\n"
-		"-g , --group id\n"
+		"-g, --group id\n"
 		"       The given group will be queried and printed. Can't be "
-		"       combined with option --set."
-		"\n", pname);
+		"       combined with option --set.\n"
+		"-D, --dev device\n"
+		"-i, --id slave\n"
+		, pname);
 }
 
 
@@ -62,6 +64,8 @@ int main(int argc, char *argv[])
 	int8_t bit = -1;
 	char setval[20];
 	int group = -1;
+	const char *dev = NULL;
+	int slave = 0;
 	bool nomodbus = false;
 	int err;
 
@@ -79,10 +83,12 @@ int main(int argc, char *argv[])
 			{"nomodbus",  0, 0, 'n'},
 			{"group",     1, 0, 'g'},
 			{"daemon",    0, 0, 'd'},
+			{"dev",       1, 0, 'D'},
+			{"id",        1, 0, 'i'},
 			{0,           0, 0,   0}
 		};
 
-		c = getopt_long(argc, argv, "s:ng:b:d", long_options, NULL);
+		c = getopt_long(argc, argv, "s:ng:b:dD:i:", long_options, NULL);
 		if (c == -1)
 			break;
 
@@ -107,6 +113,14 @@ int main(int argc, char *argv[])
 			case 'b':
 				bit = (int8_t) atoi(optarg);
 				break;
+
+			case 'i':
+				slave = atoi(optarg);
+				break;
+
+			case 'D':
+				dev = optarg;
+				break;
 			default:
 				print_usage(argv[0]);
 				return EINVAL;
@@ -116,11 +130,17 @@ int main(int argc, char *argv[])
 	if (optind < argc)
 		addr = atoi(argv[optind]);
 
-	printf("Connecting to %s modbus slave %d\n",
-	       conf.ttydev, conf.slaveid);
+	if (!dev)
+		dev = conf.ttydev;
+
+	if (!slave)
+		slave = conf.slaveid;
+
+	printf("Connecting to %s modbus slave %d stopbits %d\n",
+	       dev, slave, conf.stopbits);
 
 	if (!nomodbus) {
-		ctx = modbus_new_rtu(conf.ttydev, 19200, 'N', 8, conf.stopbits);
+		ctx = modbus_new_rtu(dev, 19200, 'N', 8, conf.stopbits);
 		if (ctx == NULL) {
 			perror("Unable to create the libmodbus context\n");
 			goto out;
@@ -140,7 +160,7 @@ int main(int argc, char *argv[])
 			goto out;
 		}
 
-		ret = modbus_set_slave(ctx, conf.slaveid);
+		ret = modbus_set_slave(ctx, slave);
 		if(ret < 0) {
 			perror("modbus_set_slave error\n");
 			goto out;
