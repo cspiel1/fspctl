@@ -211,6 +211,18 @@ struct p17_register registers[] = {
 /* 7. Time information */
 {275, 0, 112, REG_ASCII, "Time", NULL, 0, false, false},
 
+/* 8. Generated energy inquiry */
+{407, 0, 32, REG_NUM, "total generated energy", "kWh", 0, true, false},
+{409, 0, 32, REG_NUM, "generated energy of hour", "Wh", 0, true, false},
+{411, 0, 32, REG_NUM, "generated energy of day", "Wh", 0, true, false},
+{413, 0, 32, REG_NUM, "generated energy of month", "Wh", 0, true, false},
+{415, 0, 32, REG_NUM, "generated energy of year", "Wh", 0, true, false},
+{1203, 0, 80, REG_ASCII, "First generated energy saved time", NULL, 0, true, false},
+{448, 0, 80, REG_ASCII, "The date of the hourly energy", NULL, 0, false, true},
+{453, 0, 64, REG_ASCII, "The date of the daily energy", NULL, 0, false, true},
+{457, 0, 48, REG_ASCII, "The date of the monthly energy", NULL, 0, false, true},
+{460, 0, 32, REG_ASCII, "The date of the yearly energy", NULL, 0, false, true},
+
 /* 11. CPU information */
 {992, 0, 16, REG_ASCII, "Protocol ID Inquiry", NULL, 0, true, false},
 {993, 0, 64, REG_ASCII, "Main CPU Firmware version", NULL, 0, true, false},
@@ -418,6 +430,7 @@ struct p17_reg_group groups[] = {
 	{5, "5. Working mode",             0x03f2},
 	{6, "6. Working status",           0x00d3},
 	{7, "7. Time information",         0x0113},
+	{8, "8. Generated energy inquiry", 0x0197},
 	{11, "11. CPU information",         0x03E0},
 	{12, "12. Output power",            0x04E2},
 	{13, "13. LCD sleep time",          0x0411},

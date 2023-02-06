@@ -49,6 +49,7 @@ static void print_usage(const char *pname)
 		"       combined with option --set.\n"
 		"-D, --dev device\n"
 		"-i, --id slave\n"
+		"-v, --verbose\n"
 		, pname);
 }
 
@@ -67,6 +68,7 @@ int main(int argc, char *argv[])
 	const char *dev = NULL;
 	int slave = 0;
 	bool nomodbus = false;
+	bool verbose = false;
 	int err;
 
 	memset(&conf, 0, sizeof(conf));
@@ -85,10 +87,11 @@ int main(int argc, char *argv[])
 			{"daemon",    0, 0, 'd'},
 			{"dev",       1, 0, 'D'},
 			{"id",        1, 0, 'i'},
+			{"verbose",   0, 0, 'v'},
 			{0,           0, 0,   0}
 		};
 
-		c = getopt_long(argc, argv, "s:ng:b:dD:i:", long_options, NULL);
+		c = getopt_long(argc, argv, "s:ng:b:dD:i:v", long_options, NULL);
 		if (c == -1)
 			break;
 
@@ -121,6 +124,10 @@ int main(int argc, char *argv[])
 			case 'D':
 				dev = optarg;
 				break;
+
+			case 'v':
+				verbose = true;
+				break;
 			default:
 				print_usage(argv[0]);
 				return EINVAL;
@@ -146,7 +153,8 @@ int main(int argc, char *argv[])
 			goto out;
 		}
 
-		/*        ret = modbus_set_debug(ctx, TRUE);*/
+		if (verbose)
+			ret = modbus_set_debug(ctx, TRUE);
 
 		ret = modbus_rtu_set_serial_mode(ctx, MODBUS_RTU_RS232);
 		if(ret < 0){
