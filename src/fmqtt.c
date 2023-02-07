@@ -11,6 +11,7 @@
 
 #define GUUID_LEN  36
 
+#ifdef USE_MQTT
 struct fmqtt {
 	struct mosquitto *m;
 	int qos;
@@ -152,7 +153,7 @@ void fmqtt_close(void)
 
 int fmqtt_publish(const char *topic, const char *fmt, ...)
 {
-	char payload[65];
+	char payload[1280];
 	va_list va;
 	int err = 0;
 	int merr;
@@ -171,3 +172,15 @@ int fmqtt_publish(const char *topic, const char *fmt, ...)
 
 	return err;
 }
+#else
+int fmqtt_init(const struct fconf *conf) { return 0; }
+int fmqtt_loop(void) { return 0; }
+int fmqtt_publish(const char *topic, const char *fmt, ...)
+{
+	(void)topic;
+	(void)fmt;
+	return 0;
+}
+
+void fmqtt_close(void) { }
+#endif

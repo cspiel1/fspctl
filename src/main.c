@@ -14,6 +14,7 @@
 #include "fconf.h"
 #include "freg.h"
 #include "fmqtt.h"
+#include "fenergy.h"
 
 static bool run = false;
 
@@ -190,7 +191,8 @@ int main(int argc, char *argv[])
 	}
 	else if (run) {
 		bool mqtt = conf.mqtthost != NULL;
-		uint64_t ms = tmr_jiffies();
+		uint64_t slot1 = tmr_jiffies();
+		uint64_t slot2 = tmr_jiffies();
 
 		if (mqtt) {
 			err = fmqtt_init(&conf);
@@ -205,14 +207,12 @@ int main(int argc, char *argv[])
 			if (err)
 				break;
 
-			if (tmr_jiffies() > ms) {
-				ms += 5000;
-
-				/* overrun? */
-				if (ms < tmr_jiffies())
-					ms = tmr_jiffies() + 5000;
-
+			if (tmr_slot(&slot1, 5000)) {
 				err = publish_registers(ctx, &conf);
+			}
+
+			if (tmr_slot(&slot2, 2000)) {
+				err = fenergy_publish(ctx, &conf);
 			}
 
 			if (err)

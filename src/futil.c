@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <sys/time.h>
 #include <errno.h>
@@ -53,4 +54,23 @@ uint64_t tmr_jiffies(void)
 	jfs += now.tv_usec / 1000;
 
 	return jfs;
+}
+
+
+bool tmr_slot(uint64_t *slotp, uint64_t inc)
+{
+	if (!slotp)
+		return false;
+
+	if (tmr_jiffies() > *slotp) {
+		*slotp += inc;
+
+		/* overrun? */
+		if (*slotp < tmr_jiffies())
+			*slotp = tmr_jiffies() + inc;
+
+		return true;
+	}
+
+	return false;
 }

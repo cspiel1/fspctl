@@ -10,9 +10,7 @@
 
 #include "futil.h"
 #include "fconf.h"
-#ifdef USE_MQTT
 #include "fmqtt.h"
-#endif
 #include "freg.h"
 
 enum {
@@ -782,6 +780,45 @@ static int print_register_priv(modbus_t *ctx, int addr, int8_t bit,
 int print_register(modbus_t *ctx, int addr, int8_t bit)
 {
 	return print_register_priv(ctx, addr, bit, print_reg, NULL);
+}
+
+
+struct reg_user_cb {
+	register_print_h *usrph;
+	void *usrarg;
+	int err;
+};
+
+
+static void call_user_cb(struct p17_register *reg, uint16_t *val, void *arg)
+{
+	char vtxt[VALSIZE * 2 + 1];
+	int err;
+	struct reg_user_cb *cb = arg;
+
+	err = convert_reg(vtxt, reg, val);
+	if (err)
+		return;
+
+	if (cb->usrph)
+		cb->err = cb->usrph(vtxt, cb->usrarg);
+}
+
+
+int print_register_full(modbus_t *ctx, int addr, int8_t bit,
+			register_print_h *ph, void *arg)
+{
+	struct reg_user_cb cb;
+	int err;
+
+	cb.usrph = ph;
+	cb.usrarg = arg;
+
+	err = print_register_priv(ctx, addr, bit, call_user_cb, &cb);
+	if (err)
+		return err;
+
+	return cb.err;
 }
 
 

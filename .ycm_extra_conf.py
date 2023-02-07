@@ -55,6 +55,7 @@ flags = [
 '-DHAVE_EPOLL=1',
 '-DHAVE_UNISTD_H=1',
 '-DUSE_TLS=1',
+'-DUSE_MQTT=1',
 '-D_GNU_SOURCE=1',
 '-Wall',
 # THIS IS IMPORTANT! Without the '-x' flag, Clang won't know which language to

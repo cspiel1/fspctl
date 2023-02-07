@@ -5,6 +5,10 @@ project(fspctl)
 
 set(CMAKE_BUILD_TYPE Debug)
 
+
+option(WITH_MQTT "Build with MQTT" ON)
+
+
 find_package(PkgConfig REQUIRED)
 
 pkg_check_modules(MODBUS REQUIRED libmodbus)
@@ -18,6 +22,7 @@ add_executable(fspctl
 	src/fconf.c
 	src/futil.c
 	src/freg.c
+	src/fenergy.c
 )
 
 
@@ -33,11 +38,11 @@ target_link_libraries(fspctl
 	${MODBUS_LIBRARIES}
 )
 
-IF (${MOSQUITTO_FOUND} AND ${OPENSSL_FOUND})
-
-	target_sources(fspctl PRIVATE
-		src/fmqtt.c
+target_sources(fspctl PRIVATE
+	src/fmqtt.c
 	)
+
+IF (${MOSQUITTO_FOUND} AND ${OPENSSL_FOUND} AND ${WITH_MQTT})
 
 target_compile_definitions(fspctl PRIVATE
 	USE_MQTT
