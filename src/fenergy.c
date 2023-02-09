@@ -71,7 +71,7 @@ static int append_vtxth(const char *vtxt, void *arg)
 		return EAGAIN;
 
 	sprintf(body + strlen(body),
-		"\"y\": \"%s\"}", vtxt);
+		"\"%s\"]", vtxt);
 	return 0;
 }
 
@@ -132,7 +132,7 @@ int fenergy_publish(modbus_t *ctx, struct fconf *conf)
 
 			sm.hfirst = false;
 			sprintf(sm.hbody + strlen(sm.hbody),
-				"{\"x\": \"%d\", ", tm.tm_hour);
+				"[\"%lu\", ", (unsigned long int) t);
 		}
 	}
 	else if (sm.hrd) {
@@ -170,7 +170,7 @@ int fenergy_publish(modbus_t *ctx, struct fconf *conf)
 
 			sm.dfirst = false;
 			sprintf(sm.dbody + strlen(sm.dbody),
-				"{\"x\": \"%s\", ", buf);
+				"[\"%lu\", ", (unsigned long int) t);
 		}
 	}
 	else if (sm.drd) {
@@ -213,7 +213,7 @@ int fenergy_publish(modbus_t *ctx, struct fconf *conf)
 
 			sm.mfirst = false;
 			sprintf(sm.mbody + strlen(sm.mbody),
-				"{\"x\": \"%s\", ", buf);
+				"[\"%lu\", ", (unsigned long int) t);
 		}
 	}
 	else if (sm.mrd) {
@@ -250,7 +250,7 @@ int fenergy_publish(modbus_t *ctx, struct fconf *conf)
 
 			sm.yfirst = false;
 			sprintf(sm.ybody + strlen(sm.ybody),
-				"{\"x\": \"%s\", ", buf);
+				"[\"%lu\", ", (unsigned long int) t);
 		}
 	}
 	else if (sm.yrd) {
