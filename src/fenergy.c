@@ -96,27 +96,23 @@ int fenergy_publish(modbus_t *ctx, struct fconf *conf)
 	}
 
 	if (sm.tm.tm_mday != tm.tm_mday) {
-		sm.d = -14;
+		sm.d = -31;
 		strcpy(sm.dbody, "{\"day\": [");
 		sm.tm.tm_mday = tm.tm_mday;
 		sm.dfirst = true;
-	}
 
-	if (sm.tm.tm_mon != tm.tm_mon) {
 		sm.m = -12;
 		strcpy(sm.mbody, "{\"month\": [");
 		sm.tm.tm_mon = tm.tm_mon;
 		sm.mfirst = true;
-	}
 
-	if (sm.tm.tm_year != tm.tm_year) {
 		sm.y = -10;
 		strcpy(sm.ybody, "{\"year\": [");
 		sm.tm.tm_year = tm.tm_year;
 		sm.yfirst = true;
 	}
 
-	if (!sm.hrd && sm.h <= 0) {
+	if (!sm.hrd && sm.h < 0) {
 		t = time(NULL);
 		t += sm.h*3600;
 		localtime_r(&t, &tm);
@@ -142,7 +138,7 @@ int fenergy_publish(modbus_t *ctx, struct fconf *conf)
 		else {
 			sm.hrd = false;
 			++sm.h;
-			if (sm.h > 0) {
+			if (!sm.h) {
 				strcat(sm.hbody, "]}");
 #ifdef USE_MQTT
 				fmqtt_publish(topics[0], sm.hbody);
