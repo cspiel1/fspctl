@@ -70,8 +70,7 @@ static int append_vtxth(const char *vtxt, void *arg)
 	if (!strcmp(vtxt, "-16777217"))
 		return EAGAIN;
 
-	sprintf(body + strlen(body),
-		"\"%s\"]", vtxt);
+	sprintf(body + strlen(body), "\"%s\"", vtxt);
 	return 0;
 }
 
@@ -97,7 +96,7 @@ int fenergy_publish(modbus_t *ctx, struct fconf *conf)
 	}
 
 	if (sm.tm.tm_mday != tm.tm_mday) {
-		sm.d = -31;
+		sm.d = -14;
 		strcpy(sm.dbody, "{\"day\": [");
 		sm.tm.tm_mday = tm.tm_mday;
 		sm.dfirst = true;
@@ -131,8 +130,6 @@ int fenergy_publish(modbus_t *ctx, struct fconf *conf)
 				strcat(sm.hbody, ", ");
 
 			sm.hfirst = false;
-			sprintf(sm.hbody + strlen(sm.hbody),
-				"[\"%lu\", ", (unsigned long int) t);
 		}
 	}
 	else if (sm.hrd) {
@@ -169,8 +166,6 @@ int fenergy_publish(modbus_t *ctx, struct fconf *conf)
 				strcat(sm.dbody, ", ");
 
 			sm.dfirst = false;
-			sprintf(sm.dbody + strlen(sm.dbody),
-				"[\"%lu\", ", (unsigned long int) t);
 		}
 	}
 	else if (sm.drd) {
@@ -212,8 +207,6 @@ int fenergy_publish(modbus_t *ctx, struct fconf *conf)
 				strcat(sm.mbody, ", ");
 
 			sm.mfirst = false;
-			sprintf(sm.mbody + strlen(sm.mbody),
-				"[\"%lu\", ", (unsigned long int) t);
 		}
 	}
 	else if (sm.mrd) {
@@ -249,8 +242,6 @@ int fenergy_publish(modbus_t *ctx, struct fconf *conf)
 				strcat(sm.ybody, ", ");
 
 			sm.yfirst = false;
-			sprintf(sm.ybody + strlen(sm.ybody),
-				"[\"%lu\", ", (unsigned long int) t);
 		}
 	}
 	else if (sm.yrd) {
