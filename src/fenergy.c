@@ -96,7 +96,7 @@ int fenergy_publish(modbus_t *ctx, struct fconf *conf)
 	}
 
 	if (sm.tm.tm_mday != tm.tm_mday) {
-		sm.d = -31;
+		sm.d = -14;
 		strcpy(sm.dbody, "{\"day\": [");
 		sm.tm.tm_mday = tm.tm_mday;
 		sm.dfirst = true;
