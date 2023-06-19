@@ -1044,7 +1044,7 @@ static void publish_reg_handler(struct p17_register *reg, uint16_t *val,
 	if (err)
 		return;
 
-	fmqtt_publish(topic, vtxt);
+	fmqtt_publish(topic, false, vtxt);
 }
 #endif
 

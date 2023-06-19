@@ -141,7 +141,7 @@ int fenergy_publish(modbus_t *ctx, struct fconf *conf)
 			if (!sm.h) {
 				strcat(sm.hbody, "]}");
 #ifdef USE_MQTT
-				fmqtt_publish(topics[0], sm.hbody);
+				fmqtt_publish(topics[0], true, sm.hbody);
 #else
 				printf("%s\n", sm.hbody);
 #endif
@@ -177,7 +177,7 @@ int fenergy_publish(modbus_t *ctx, struct fconf *conf)
 			if (sm.d > 0) {
 				strcat(sm.dbody, "]}");
 #ifdef USE_MQTT
-				fmqtt_publish(topics[1], sm.dbody);
+				fmqtt_publish(topics[1], true, sm.dbody);
 #else
 				printf("%s\n", sm.dbody);
 #endif
@@ -217,7 +217,7 @@ int fenergy_publish(modbus_t *ctx, struct fconf *conf)
 			if (sm.m > 0) {
 				strcat(sm.mbody, "]}");
 #ifdef USE_MQTT
-				fmqtt_publish(topics[2], sm.mbody);
+				fmqtt_publish(topics[2], true, sm.mbody);
 #else
 				printf("%s\n", sm.mbody);
 #endif
@@ -252,7 +252,7 @@ int fenergy_publish(modbus_t *ctx, struct fconf *conf)
 			if (sm.y > 0) {
 				strcat(sm.ybody, "]}");
 #ifdef USE_MQTT
-				fmqtt_publish(topics[3], sm.ybody);
+				fmqtt_publish(topics[3], true, sm.ybody);
 #else
 				printf("%s\n", sm.ybody);
 #endif

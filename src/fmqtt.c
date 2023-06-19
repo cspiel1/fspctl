@@ -151,7 +151,7 @@ void fmqtt_close(void)
 }
 
 
-int fmqtt_publish(const char *topic, const char *fmt, ...)
+int fmqtt_publish(const char *topic, bool retain, const char *fmt, ...)
 {
 	char payload[1280];
 	va_list va;
@@ -162,7 +162,7 @@ int fmqtt_publish(const char *topic, const char *fmt, ...)
 	vsnprintf(payload, sizeof(payload), fmt, va);
 	va_end(va);
 	merr = mosquitto_publish(d.m, NULL, topic, strlen(payload), payload, 1,
-				 false);
+				 retain);
 
 	if (merr) {
 		printf("ERR - Could not publish to MQTT broker\n");
@@ -175,10 +175,11 @@ int fmqtt_publish(const char *topic, const char *fmt, ...)
 #else
 int fmqtt_init(const struct fconf *conf) { return 0; }
 int fmqtt_loop(void) { return 0; }
-int fmqtt_publish(const char *topic, const char *fmt, ...)
+int fmqtt_publish(const char *topic, bool retain, const char *fmt, ...)
 {
 	(void)topic;
 	(void)fmt;
+	(void)retain;
 	return 0;
 }
 
