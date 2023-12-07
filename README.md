@@ -28,4 +28,18 @@ publish1   address bit mqtt-topic
 publish9   address bit mqtt-topic
 ```
 
+Requirements
+-------------
+Debian/RaspberryPiOS: 
+```
+sudo apt install cmake libmodbus-dev libmosquitto-dev libssl-dev
+```
 
+Building
+-------------
+```
+mkdir build
+cd build
+cmake ..
+make
+```
