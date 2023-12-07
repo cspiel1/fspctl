@@ -32,7 +32,7 @@ Requirements
 -------------
 Debian/RaspberryPiOS: 
 ```
-sudo apt install cmake libmodbus-dev libmosquitto-dev libssl-dev
+sudo apt install cmake libmodbus-dev libmosquitto-dev libssl-dev build-essential
 ```
 
 Building
