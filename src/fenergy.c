@@ -185,7 +185,7 @@ int fenergy_publish(modbus_t *ctx, struct fconf *conf)
 		}
 	}
 
-	if (!sm.mrd && sm.m <= 0) {
+	if (!sm.mrd && sm.m < 0) {
 		t = time(NULL);
 		localtime_r(&t, &tm);
 		int mon = tm.tm_mon + 1 + sm.m;
@@ -214,7 +214,7 @@ int fenergy_publish(modbus_t *ctx, struct fconf *conf)
 		else {
 			sm.mrd = false;
 			++sm.m;
-			if (sm.m > 0) {
+			if (sm.m >= 0) {
 				strcat(sm.mbody, "]}");
 #ifdef USE_MQTT
 				fmqtt_publish(topics[2], true, sm.mbody);
