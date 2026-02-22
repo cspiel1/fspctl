@@ -1,0 +1,10 @@
+[Unit]
+Description=Arch Linux automatic upgrade
+
+[Timer]
+OnCalendar=*-*-* 02:10:00
+Persistent=true
+RandomizedDelaySec=300
+
+[Install]
+WantedBy=timers.target

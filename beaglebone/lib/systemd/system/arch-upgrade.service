@@ -1,0 +1,6 @@
+[Unit]
+Description=Arch Linux automatic upgrade
+
+[Service]
+Type=simple
+ExecStart=/bin/bash /home/alarm/pacman-upgrade.sh
