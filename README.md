@@ -30,16 +30,38 @@ publish9   address bit mqtt-topic
 
 Requirements
 -------------
-Debian/RaspberryPiOS: 
+E.g. on Debian/Ubuntu:
 ```
 sudo apt install cmake libmodbus-dev libmosquitto-dev libssl-dev build-essential
 ```
 
 Building
--------------
+--------
 ```
 mkdir build
 cd build
 cmake ..
 make
+```
+
+Cross Compile for ARM
+---------------------
+
+- Download toolchain for ARM architecture from
+https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads
+- Install toolchain
+```
+tar -xf arm-gnu-toolchain-*-x86_64-arm-none-linux-gnueabihf.tar.xz
+# move it to your preferred location and create a symlink,
+# e.g. ~/dev/arm-toolchain
+```
+- scp the sysroot to your build machine
+```
+rsync -ac root@fspctl:/{lib,usr} ~/dev/arm-sysroot
+```
+- Edit arm.cmake to point to the toolchain and sysroot
+
+- Cross compile fspctl
+```
+./arm.sh
 ```
