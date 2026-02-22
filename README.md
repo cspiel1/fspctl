@@ -32,7 +32,7 @@ Requirements
 -------------
 E.g. on Debian/Ubuntu:
 ```
-sudo apt install cmake libmodbus-dev libmosquitto-dev libssl-dev build-essential
+sudo apt install cmake libmodbus-dev libmosquitto-dev libssl-dev
 ```
 
 Building
